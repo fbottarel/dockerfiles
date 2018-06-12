@@ -18,16 +18,18 @@ stages:
     stage: cuda
     script:
     - VERSION="${CI_JOB_NAME:1}"
+    - docker pull "${REPOSITORY}:${VERSION}-base-${OS}" || true
     - docker build --pull -t "${REPOSITORY}:${VERSION}-base-${OS}"
-                   --label "com.nvidia.build.ref=${CI_COMMIT_SHA}"
-                   --label "com.nvidia.build.id=${CI_JOB_ID}"
+                   --cache-from "${REPOSITORY}:${VERSION}-base-${OS}"
                    "${VERSION}/base"
+    - docker pull "${REPOSITORY}:${VERSION}-runtime-${OS}" || true
     - docker build -t "${REPOSITORY}:${VERSION}-runtime-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-runtime-${OS}"
                    --build-arg "repository=${REPOSITORY}"
-                   --label "com.nvidia.build.ref=${CI_COMMIT_SHA}"
-                   --label "com.nvidia.build.id=${CI_JOB_ID}"
                    "${VERSION}/runtime"
+    - docker pull "${REPOSITORY}:${VERSION}-devel-${OS}" || true
     - docker build -t "${REPOSITORY}:${VERSION}-devel-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-devel-${OS}"
                    --build-arg "repository=${REPOSITORY}"
                    "${VERSION}/devel"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
@@ -46,10 +48,14 @@ stages:
     - VERSION="${CI_JOB_NAME:1}"
     - CUDA_VERSION="${CI_JOB_NAME:1:3}"
     - CUDNN_VERSION="${CI_JOB_NAME:5}"
+    - docker pull "${REPOSITORY}:${VERSION}-runtime-${OS}" || true
     - docker build --pull -t "${REPOSITORY}:${VERSION}-runtime-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-runtime-${OS}"
                    --build-arg "repository=${REPOSITORY}"
                    "${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
+    - docker pull "${REPOSITORY}:${VERSION}-devel-${OS}" || true
     - docker build --pull -t "${REPOSITORY}:${VERSION}-devel-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-devel-${OS}"
                    --build-arg "repository=${REPOSITORY}"
                    "${CUDA_VERSION}/devel/${CUDNN_VERSION}"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
