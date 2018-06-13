@@ -20,16 +20,16 @@ stages:
     - VERSION="${CI_JOB_NAME:1}"
     - docker pull "${REPOSITORY}:${VERSION}-base-${OS}" || true
     - docker build --pull -t "${REPOSITORY}:${VERSION}-base-${OS}"
-                   --cache-from "${REPOSITORY}:${VERSION}-base-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-base-${OS}-disable"
                    "${VERSION}/base"
     - docker pull "${REPOSITORY}:${VERSION}-runtime-${OS}" || true
     - docker build -t "${REPOSITORY}:${VERSION}-runtime-${OS}"
-                   --cache-from "${REPOSITORY}:${VERSION}-runtime-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-runtime-${OS}-disable"
                    --build-arg "repository=${REPOSITORY}"
                    "${VERSION}/runtime"
     - docker pull "${REPOSITORY}:${VERSION}-devel-${OS}" || true
     - docker build -t "${REPOSITORY}:${VERSION}-devel-${OS}"
-                   --cache-from "${REPOSITORY}:${VERSION}-devel-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-devel-${OS}-disable"
                    --build-arg "repository=${REPOSITORY}"
                    "${VERSION}/devel"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
@@ -50,12 +50,12 @@ stages:
     - CUDNN_VERSION="${CI_JOB_NAME:5}"
     - docker pull "${REPOSITORY}:${VERSION}-runtime-${OS}" || true
     - docker build --pull -t "${REPOSITORY}:${VERSION}-runtime-${OS}"
-                   --cache-from "${REPOSITORY}:${VERSION}-runtime-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-runtime-${OS}-disable"
                    --build-arg "repository=${REPOSITORY}"
                    "${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
     - docker pull "${REPOSITORY}:${VERSION}-devel-${OS}" || true
     - docker build --pull -t "${REPOSITORY}:${VERSION}-devel-${OS}"
-                   --cache-from "${REPOSITORY}:${VERSION}-devel-${OS}"
+                   --cache-from "${REPOSITORY}:${VERSION}-devel-${OS}-disable"
                    --build-arg "repository=${REPOSITORY}"
                    "${CUDA_VERSION}/devel/${CUDNN_VERSION}"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
