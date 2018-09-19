@@ -46,8 +46,8 @@ stages:
     stage: cudnn
     script:
     - VERSION="${CI_JOB_NAME:1}"
-    - CUDA_VERSION="${CI_JOB_NAME:1:3}"
-    - CUDNN_VERSION="${CI_JOB_NAME:5}"
+    - CUDA_VERSION="${VERSION%-*}"
+    - CUDNN_VERSION="${VERSION#*-}"
     - docker pull "${REPOSITORY}:${VERSION}-runtime-${OS}" || true
     - docker build --pull -t "${REPOSITORY}:${VERSION}-runtime-${OS}"
                    --cache-from "${REPOSITORY}:${VERSION}-runtime-${OS}-disable"
