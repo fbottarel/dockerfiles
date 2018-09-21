@@ -69,3 +69,14 @@ v9.2:
 
 v9.2-cudnn7:
     <<: *cudnn_definition
+
+v10.0:
+    variables:
+        NO_OS_SUFFIX: "true"
+        LATEST: "true"
+    <<: *cuda_base_definition
+
+v10.0-cudnn7:
+    variables:
+        NO_OS_SUFFIX: "true"
+    <<: *cudnn_definition
