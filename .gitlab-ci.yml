@@ -69,12 +69,6 @@ stages:
       docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:${VERSION}-devel";
     fi
 
-deploy:
-  stage: deploy
-  script:
-    - exit 0
-    - docker push ${IMAGE_NAME}
-
 # v9.2:
     # variables:
         # NO_OS_SUFFIX: "true"
@@ -99,21 +93,21 @@ deploy:
         # LATEST: "true"
     # <<: *cudnn_definition
 
-# v10.1:
-#   tags:
-#     - cuda-docker-10.1
-#   variables:
-#     NO_OS_SUFFIX: "true"
-#     LATEST: "true"
-#   <<: *cuda_base_definition
-#
-# v10.1-cudnn7:
-#   tags:
-#     - cuda-docker-10.1
-#   variables:
-#     NO_OS_SUFFIX: "true"
-#     LATEST: "true"
-#   <<: *cudnn_definition
+v10.1:
+  tags:
+    - cuda-docker-10.1
+  variables:
+    NO_OS_SUFFIX: "true"
+    LATEST: "true"
+  <<: *cuda_base_definition
+
+v10.1-cudnn7:
+  tags:
+    - cuda-docker-10.1
+  variables:
+    NO_OS_SUFFIX: "true"
+    LATEST: "true"
+  <<: *cudnn_definition
 
 v10.1-test:
   stage: test
@@ -125,8 +119,17 @@ v10.1-test:
   script:
     - git clone https://gitlab.com/nvidia/cuda-docker-test.git
     - cd cuda-docker-test/
-    - bash ./scripts/bats_install.sh
-    - bash ./scripts/run_tests.sh
+    - git log -1 --pretty=oneline
+    - bash -e ./scripts/bats_install.sh
+    - bash -e ./scripts/run_tests.sh
+
+v10.1-deploy:
+  stage: deploy
+  tags:
+   - cuda-docker-10.1
+  script:
+    - exit 0
+    - docker push ${IMAGE_NAME}
 
 # v10.1-test-ngc:
 #   stage: test

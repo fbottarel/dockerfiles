@@ -1,5 +1,5 @@
-ARG repository
-FROM ${repository}:9.2-runtime-ubuntu18.04
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:9.2-runtime-ubuntu18.04
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 ENV CUDNN_VERSION 7.4.1.5
