@@ -69,29 +69,76 @@ stages:
       docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:${VERSION}-devel";
     fi
 
-# v9.2:
-    # variables:
-        # NO_OS_SUFFIX: "true"
-        # LATEST: "true"
-    # <<: *cuda_base_definition
+v9.2:
+  tags:
+    - cuda-docker
+  variables:
+    NO_OS_SUFFIX: "true"
+  <<: *cuda_base_definition
 
-# v9.2-cudnn7:
-    # variables:
-        # NO_OS_SUFFIX: "true"
-        # LATEST: "true"
-    # <<: *cudnn_definition
+v9.2-cudnn7:
+  tags:
+    - cuda-docker
+  variables:
+    NO_OS_SUFFIX: "true"
+  <<: *cudnn_definition
 
-# v10.0:
-    # variables:
-        # NO_OS_SUFFIX: "true"
-        # LATEST: "true"
-    # <<: *cuda_base_definition
 
-# v10.0-cudnn7:
-    # variables:
-        # NO_OS_SUFFIX: "true"
-        # LATEST: "true"
-    # <<: *cudnn_definition
+# FIXME: need a runner with cuda 9.2
+.v9.2-test:
+  stage: test
+  tags:
+    - cuda-docker
+  variables:
+    CUDA_TEST_VERSION: "9.2"
+  script:
+    - git clone https://gitlab.com/nvidia/cuda-docker-test.git
+    - cd cuda-docker-test/
+    - git log -1 --pretty=oneline
+    - bash -e ./scripts/bats_install.sh
+    - bash -e ./scripts/run_tests.sh
+
+v9.2-deploy:
+  stage: deploy
+  tags:
+   - cuda-docker
+  script:
+    - docker images | grep ${IMAGE_NAME} | grep "9.2" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs docker push
+
+v10.0:
+  tags:
+    - cuda-docker
+  variables:
+    NO_OS_SUFFIX: "true"
+  <<: *cuda_base_definition
+
+v10.0-cudnn7:
+  tags:
+    - cuda-docker
+  variables:
+    NO_OS_SUFFIX: "true"
+  <<: *cudnn_definition
+
+# FIXME: need a runner with cuda 10.0
+.v10.0-test:
+  stage: test
+  tags:
+    - cuda-docker-10.1
+  variables:
+    CUDA_TEST_VERSION: "10.0"
+  script:
+    - git clone https://gitlab.com/nvidia/cuda-docker-test.git
+    - cd cuda-docker-test/
+    - git log -1 --pretty=oneline
+    - bash -e ./scripts/bats_install.sh
+    - bash -e ./scripts/run_tests.sh
+
+v10.0-deploy:
+  stage: deploy
+  tags:
+   - cuda-docker
+  script:
+    - docker images | grep ${IMAGE_NAME} | grep "10.0" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs docker push
 
 v10.1:
   tags:
@@ -106,15 +153,13 @@ v10.1-cudnn7:
     - cuda-docker-10.1
   variables:
     NO_OS_SUFFIX: "true"
-    LATEST: "true"
   <<: *cudnn_definition
 
 v10.1-test:
   stage: test
   tags:
-   - cuda-docker-10.1
+    - cuda-docker-10.1
   variables:
-    OS: "ubuntu18.04"
     CUDA_TEST_VERSION: "10.1"
   script:
     - git clone https://gitlab.com/nvidia/cuda-docker-test.git
@@ -128,18 +173,4 @@ v10.1-deploy:
   tags:
    - cuda-docker-10.1
   script:
-    - exit 0
-    - docker push ${IMAGE_NAME}
-
-# v10.1-test-ngc:
-#   stage: test
-#   tags:
-#     - cuda-docker-10.1
-#   variables:
-#     OS: "ubuntu18.04"
-#     CUDA_TEST_VERSION: "10.1"
-#     REGISTRY_NGC: nvcr.io/nvidian/cuda-installer/cuda
-#   script:
-#     - git clone git@gitlab.com:nvidia/cuda-docker-test.git
-#     - cd cuda-docker-test/
-#     - ./scripts/run_tests.sh
+    - docker images | grep ${IMAGE_NAME} | grep "10.1" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }'
