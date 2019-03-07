@@ -47,6 +47,11 @@ stages:
     - if [[ "${LATEST}" == true ]]; then
         docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:latest";
       fi
+    # A push must be done immediately after the build because a separate deploy job might not get the same runner. This sucks.
+    # FIXME: remove once https://gitlab.com/gitlab-org/gitlab-ce/issues/29447 is implemented
+    - if [[ -z $NV_CI_INTERNAL ]]; then
+        docker images | grep ${IMAGE_NAME} | grep "${VERSION}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
+      fi
 
 .cudnn_template: &cudnn_definition
   stage: cudnn
@@ -68,12 +73,21 @@ stages:
         docker tag "${IMAGE_NAME}:${VERSION}-runtime-${OS}" "${IMAGE_NAME}:${VERSION}-runtime";
         docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:${VERSION}-devel";
       fi
+    # A push must be done immediately after the build because a separate deploy job might not get the same runner. This sucks.
+    # FIXME: remove once https://gitlab.com/gitlab-org/gitlab-ce/issues/29447 is implemented
+    - if [[ -z $NV_CI_INTERNAL ]]; then
+        docker images | grep ${IMAGE_NAME} | grep "${CUDA_VERSION}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
+      fi
 
 .test_template: &test_definition
   stage: test
+  only:
+    variables:
+      # Not implemented yet for gitlab.com
+      - $NV_CI_INTERNAL
   script:
-    - CUDA_VERSION="${CI_JOB_NAME%-*}"
-    - CUDA_TEST_VERSION="${CUDA_VERSION:1}"
+    - export CUDA_VERSION="${CI_JOB_NAME%-*}"
+    - export CUDA_TEST_VERSION="${CUDA_VERSION:1}"
     - git clone https://gitlab.com/nvidia/cuda-docker-test.git
     - cd cuda-docker-test/
     - git log -1 --pretty=oneline
@@ -82,6 +96,10 @@ stages:
 
 .deploy_template: &deploy_definition
   stage: deploy
+  only:
+    variables:
+      # Not implemented yet for gitlab.com
+      - $NV_CI_INTERNAL
   script:
     - CUDA_VERSION="${CI_JOB_NAME%-*}"
     - docker images | grep ${IMAGE_NAME} | grep "${CUDA_VERSION:1}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push
@@ -152,7 +170,7 @@ v10.1-cudnn7:
   <<: *cudnn_definition
 
 # FIXME: need a runner with cuda 10.1
-.v10.1-test:
+v10.1-test:
   tags:
     - cuda-docker-10.1
   <<: *test_definition
