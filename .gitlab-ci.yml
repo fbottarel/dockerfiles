@@ -10,7 +10,7 @@ variables:
 
 before_script:
   - apk add --no-cache git bash findutils
-  - if [[ -n $NV_CI_INTERNAL ]]; then
+  - if [[ ! -z $NV_CI_INTERNAL ]]; then
       export REGISTRY="gitlab-master.nvidia.com:5005";
       export REGISTRY_USER="gitlab-ci-token";
       export REGISTRY_TOKEN="${CI_JOB_TOKEN}";
