@@ -107,6 +107,7 @@ stages:
 v9.2:
   tags:
     - cuda-docker
+    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
@@ -114,6 +115,7 @@ v9.2:
 v9.2-cudnn7:
   tags:
     - cuda-docker
+    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
@@ -122,16 +124,19 @@ v9.2-cudnn7:
 .v9.2-test:
   tags:
     - cuda-docker
+    - docker
   <<: *test_definition
 
 v9.2-deploy:
   tags:
     - cuda-docker
+    - docker
   <<: *deploy_definition
 
 v10.0:
   tags:
     - cuda-docker
+    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
@@ -139,6 +144,7 @@ v10.0:
 v10.0-cudnn7:
   tags:
     - cuda-docker
+    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
@@ -147,16 +153,19 @@ v10.0-cudnn7:
 .v10.0-test:
   tags:
     - cuda-docker
+    - docker
   <<: *test_definition
 
 v10.0-deploy:
   tags:
     - cuda-docker
+    - docker
   <<: *deploy_definition
 
 v10.1:
   tags:
     - cuda-docker-10.1
+    - docker
   variables:
     NO_OS_SUFFIX: "true"
     LATEST: "true"
@@ -165,6 +174,7 @@ v10.1:
 v10.1-cudnn7:
   tags:
     - cuda-docker-10.1
+    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
