@@ -105,87 +105,53 @@ stages:
     - docker images | grep ${IMAGE_NAME} | grep "${CUDA_VERSION:1}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push
 
 v9.2:
-  tags:
-    - cuda-docker
-    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
 
 v9.2-cudnn7:
-  tags:
-    - cuda-docker
-    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
 
 # FIXME: need a runner with cuda 9.2
 .v9.2-test:
-  tags:
-    - cuda-docker
-    - docker
   <<: *test_definition
 
 v9.2-deploy:
-  tags:
-    - cuda-docker
-    - docker
   <<: *deploy_definition
 
 v10.0:
-  tags:
-    - cuda-docker
-    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
 
 v10.0-cudnn7:
-  tags:
-    - cuda-docker
-    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
 
 # FIXME: need a runner with cuda 10.0
 .v10.0-test:
-  tags:
-    - cuda-docker
-    - docker
   <<: *test_definition
 
 v10.0-deploy:
-  tags:
-    - cuda-docker
-    - docker
   <<: *deploy_definition
 
 v10.1:
-  tags:
-    - cuda-docker-10.1
-    - docker
   variables:
     NO_OS_SUFFIX: "true"
     LATEST: "true"
   <<: *cuda_base_definition
 
 v10.1-cudnn7:
-  tags:
-    - cuda-docker-10.1
-    - docker
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
 
 # FIXME: need a runner with cuda 10.1
 v10.1-test:
-  tags:
-    - cuda-docker-10.1
   <<: *test_definition
 
 v10.1-deploy:
-  tags:
-    - cuda-docker-10.1
   <<: *deploy_definition
