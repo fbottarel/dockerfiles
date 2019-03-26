@@ -17,12 +17,6 @@ before_script:
       export IMAGE_NAME="${REGISTRY}/${IMAGE_NAME}";
     fi
   - docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
-  - push_images() {
-      docker images | grep ${IMAGE_NAME} | grep "${IMAGE_NAME}\ *${CI_JOB_NAME:1:-7}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
-      if [[ ! -z $LATEST ]]; then
-        docker push ${IMAGE_NAME}:latest;
-      fi
-    }
 
 stages:
   - cuda
@@ -99,8 +93,10 @@ stages:
   stage: deploy
   <<: *tags_definition
   script:
-    - CUDA_VERSION="${CI_JOB_NAME%-*}"
-    - push_images
+    - docker images | grep ${IMAGE_NAME} | grep "${IMAGE_NAME}\ *${CI_JOB_NAME:1:-7}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
+    - if [[ ! -z $LATEST ]]; then
+        docker push ${IMAGE_NAME}:latest;
+      fi
 
 v9.2:
   variables:
