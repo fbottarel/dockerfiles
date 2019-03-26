@@ -1,7 +1,7 @@
 image: docker:stable
 
-services:
-  - docker:stable-dind
+# NOTE: The docker:stable-dind service is not used here because --add-runtime=nvidia does not work and we need the runtime to
+#       perform tests
 
 variables:
   GIT_DEPTH: "1"
@@ -17,6 +17,12 @@ before_script:
       export IMAGE_NAME="${REGISTRY}/${IMAGE_NAME}";
     fi
   - docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
+  - push_images() {
+      docker images | grep ${IMAGE_NAME} | grep "${IMAGE_NAME}\ *${CI_JOB_NAME:1:-7}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
+      if [[ ! -z $LATEST ]]; then
+        docker push ${IMAGE_NAME}:latest;
+      fi
+    }
 
 stages:
   - cuda
@@ -24,8 +30,13 @@ stages:
   - test
   - deploy
 
+.tags_template: &tags_definition
+  tags:
+    - cuda-docker-10.1
+
 .cuda_base_template: &cuda_base_definition
   stage: cuda
+  <<: *tags_definition
   script:
     - VERSION="${CI_JOB_NAME:1}"
     - docker build -t "${IMAGE_NAME}:${VERSION}-base-${OS}"
@@ -47,20 +58,14 @@ stages:
     - if [[ "${LATEST}" == true ]]; then
         docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:latest";
       fi
-    # A push must be done immediately after the build because a separate deploy job might not get the same runner. This sucks.
-    # FIXME: remove once https://gitlab.com/gitlab-org/gitlab-ce/issues/29447 is implemented
-    - if [[ -z $NV_CI_INTERNAL ]]; then
-        docker images | grep ${IMAGE_NAME} | grep "${VERSION}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
-      fi
 
 .cudnn_template: &cudnn_definition
   stage: cudnn
+  <<: *tags_definition
   script:
     - VERSION="${CI_JOB_NAME:1}"
     - CUDA_VERSION="${VERSION%-*}"
     - CUDNN_VERSION="${VERSION#*-}"
-    - docker images
-    - docker ps
     - docker build -t "${IMAGE_NAME}:${VERSION}-runtime-${OS}"
                    --cache-from "${IMAGE_NAME}:${VERSION}-runtime-${OS}-disable"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
@@ -73,14 +78,10 @@ stages:
         docker tag "${IMAGE_NAME}:${VERSION}-runtime-${OS}" "${IMAGE_NAME}:${VERSION}-runtime";
         docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:${VERSION}-devel";
       fi
-    # A push must be done immediately after the build because a separate deploy job might not get the same runner. This sucks.
-    # FIXME: remove once https://gitlab.com/gitlab-org/gitlab-ce/issues/29447 is implemented
-    - if [[ -z $NV_CI_INTERNAL ]]; then
-        docker images | grep ${IMAGE_NAME} | grep "${CUDA_VERSION}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
-      fi
 
 .test_template: &test_definition
   stage: test
+  <<: *tags_definition
   only:
     variables:
       # Not implemented yet for gitlab.com
@@ -96,13 +97,14 @@ stages:
 
 .deploy_template: &deploy_definition
   stage: deploy
+  <<: *tags_definition
   only:
     variables:
       # Not implemented yet for gitlab.com
       - $NV_CI_INTERNAL
   script:
     - CUDA_VERSION="${CI_JOB_NAME%-*}"
-    - docker images | grep ${IMAGE_NAME} | grep "${CUDA_VERSION:1}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push
+    - push_images
 
 v9.2:
   variables:
@@ -154,4 +156,6 @@ v10.1-test:
   <<: *test_definition
 
 v10.1-deploy:
+  variables:
+    LATEST: "true"
   <<: *deploy_definition
