@@ -76,10 +76,6 @@ stages:
 .test_template: &test_definition
   stage: test
   <<: *tags_definition
-  only:
-    variables:
-      # Not implemented yet for gitlab.com
-      - $NV_CI_INTERNAL
   script:
     - export CUDA_VERSION="${CI_JOB_NAME%-*}"
     - export CUDA_TEST_VERSION="${CUDA_VERSION:1}"
