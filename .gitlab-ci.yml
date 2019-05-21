@@ -95,16 +95,11 @@ stages:
       fi
 
 v9.2:
-  variables:
-    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
 
 v9.2-cudnn7:
-  variables:
-    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
 
-# FIXME: need a runner with cuda 9.2
 .v9.2-test:
   <<: *test_definition
 
@@ -121,7 +116,6 @@ v10.0-cudnn7:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
 
-# FIXME: need a runner with cuda 10.0
 .v10.0-test:
   <<: *test_definition
 
@@ -139,7 +133,6 @@ v10.1-cudnn7:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
 
-# FIXME: need a runner with cuda 10.1
 v10.1-test:
   <<: *test_definition
 
