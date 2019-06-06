@@ -1,15 +1,37 @@
 image: docker:stable
 
-# NOTE: The docker:stable-dind service is not used here because --add-runtime=nvidia does not work and we need the runtime to
-#       perform tests
+# NOTE: The docker:stable-dind service is not used here because --add-runtime=nvidia does not work from DIND and we need the
+#       runtime to perform tests
 
 variables:
   GIT_DEPTH: "1"
   IMAGE_NAME: "${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
-  OS: "${CI_COMMIT_REF_NAME}"
 
 before_script:
-  - apk add --no-cache git bash findutils
+  - apk add --no-cache git bash findutils python3
+  - python3 -m ensurepip && \
+  - rm -r /usr/lib/python*/ensurepip && \
+  - pip3 install --upgrade pip setuptools && \
+  - if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi && \
+  - if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
+  - rm -r /root/.cache
+  - pip install pipenv
+  - ls -lh
+  - pipenv install --system
+  - pip list
+  - OS="$(echo ${CI_JOB_NAME} | cut -f1 -d-)"
+  - echo $OS
+  - OS_NAME="$(echo ${CI_JOB_NAME} | cut -f1 -d-| sed 's/[[:digit:]]*//g')"
+  - echo $OS_NAME
+  - OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/.*\([0-9\.]$\)/\1/p')"
+  - echo $OS_VERSION
+  - echo $CI_JOB_NAME
+  - CUDA_VERSION="$(echo ${CI_JOB_NAME} | cut -f2 -d- | awk -Fv '{ print $2 }')"
+  - CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
+  - echo $CUDNN_VERSION
+  - echo $CUDA_VERSION
+  # Build Dockerfiles from templates
+  - python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}"
   - if [[ ! -z $NV_CI_INTERNAL ]]; then
       export REGISTRY="gitlab-master.nvidia.com:5005";
       export REGISTRY_USER="gitlab-ci-token";
@@ -19,6 +41,8 @@ before_script:
   - docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
 
 stages:
+  # trigger stage is a workaround until https://gitlab.com/gitlab-org/gitlab-ce/issues/22972 is implemented
+  # - trigger
   - cuda
   - cudnn
   - test
@@ -32,51 +56,40 @@ stages:
   stage: cuda
   <<: *tags_definition
   script:
-    - VERSION="${CI_JOB_NAME:1}"
-    - docker build -t "${IMAGE_NAME}:${VERSION}-base-${OS}"
-                   --cache-from "${IMAGE_NAME}:${VERSION}-base-${OS}-disable"
-                   "${VERSION}/base"
-    - docker build -t "${IMAGE_NAME}:${VERSION}-runtime-${OS}"
-                   --cache-from "${IMAGE_NAME}:${VERSION}-runtime-${OS}-disable"
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "${VERSION}/runtime"
-    - docker build -t "${IMAGE_NAME}:${VERSION}-devel-${OS}"
-                   --cache-from "${IMAGE_NAME}:${VERSION}-devel-${OS}-disable"
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "${VERSION}/devel"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "build/${OS}/base"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/runtime"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/devel"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${VERSION}-base-${OS}" "${IMAGE_NAME}:${VERSION}-base";
-        docker tag "${IMAGE_NAME}:${VERSION}-runtime-${OS}" "${IMAGE_NAME}:${VERSION}-runtime";
-        docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:${VERSION}-devel";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-base";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
       fi
     - if [[ "${LATEST}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:latest";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:latest";
       fi
 
 .cudnn_template: &cudnn_definition
   stage: cudnn
   <<: *tags_definition
   script:
-    - VERSION="${CI_JOB_NAME:1}"
-    - CUDA_VERSION="${VERSION%-*}"
-    - CUDNN_VERSION="${VERSION#*-}"
-    - docker build -t "${IMAGE_NAME}:${VERSION}-runtime-${OS}"
-                   --cache-from "${IMAGE_NAME}:${VERSION}-runtime-${OS}-disable"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
-    - docker build -t "${IMAGE_NAME}:${VERSION}-devel-${OS}"
-                   --cache-from "${IMAGE_NAME}:${VERSION}-devel-${OS}-disable"
+                   "build/${OS}/runtime/${CUDNN_VERSION}"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "${CUDA_VERSION}/devel/${CUDNN_VERSION}"
+                   "build/${OS}/devel/${CUDNN_VERSION}"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${VERSION}-runtime-${OS}" "${IMAGE_NAME}:${VERSION}-runtime";
-        docker tag "${IMAGE_NAME}:${VERSION}-devel-${OS}" "${IMAGE_NAME}:${VERSION}-devel";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
       fi
 
 .test_template: &test_definition
   stage: test
   <<: *tags_definition
   script:
+    - exit 0
     - export CUDA_VERSION="${CI_JOB_NAME%-*}"
     - export CUDA_TEST_VERSION="${CUDA_VERSION:1}"
     - git clone https://gitlab.com/nvidia/cuda-docker-test.git
@@ -89,54 +102,40 @@ stages:
   stage: deploy
   <<: *tags_definition
   script:
-    - docker images | grep ${IMAGE_NAME} | grep "${IMAGE_NAME}\ *${CI_JOB_NAME:1:-7}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
+    - docker images | grep "${IMAGE_NAME}\ *${CUDA_VERSION}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
     - if [[ ! -z $LATEST ]]; then
         docker push ${IMAGE_NAME}:latest;
       fi
 
-v9.2:
+centos6-v10.1:
   <<: *cuda_base_definition
 
-v9.2-cudnn7:
-  <<: *cudnn_definition
-
-.v9.2-test:
-  <<: *test_definition
-
-v9.2-deploy:
-  <<: *deploy_definition
-
-v10.0:
-  variables:
-    NO_OS_SUFFIX: "true"
-  <<: *cuda_base_definition
-
-v10.0-cudnn7:
+centos6-v10.1-cudnn7:
   variables:
     NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
 
-.v10.0-test:
+centos6-v10.1-test:
   <<: *test_definition
 
-v10.0-deploy:
-  <<: *deploy_definition
-
-v10.1:
-  variables:
-    NO_OS_SUFFIX: "true"
-    LATEST: "true"
-  <<: *cuda_base_definition
-
-v10.1-cudnn7:
-  variables:
-    NO_OS_SUFFIX: "true"
-  <<: *cudnn_definition
-
-v10.1-test:
-  <<: *test_definition
-
-v10.1-deploy:
+centos6-v10.1-deploy:
   variables:
     LATEST: "true"
   <<: *deploy_definition
+
+# centos7-v10.1:
+  # <<: *cuda_base_definition
+
+# centos7-v10.1-cudnn7:
+  # variables:
+    # NO_OS_SUFFIX: "true"
+  # <<: *cudnn_definition
+
+# centos7-v10.1-test:
+  # <<: *test_definition
+
+# centos7-v10.1-deploy:
+  # variables:
+    # LATEST: "true"
+  # <<: *deploy_definition
+
