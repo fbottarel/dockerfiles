@@ -1,0 +1,64 @@
+#!/usr/bin/env bats
+
+load helpers
+
+image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-devel-${OS}"
+
+function setup() {
+    check_runtime
+}
+
+function teardown() {
+    cleanup
+}
+
+@test "deviceQuery" {
+    cat <<EOF > Dockerfile
+    FROM ${image}
+    {% if cuda.os.distro == "ubuntu" -%}
+    RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% elif cuda.os.distro == "centos" -%}
+    RUN yum install -y gcc-c++ make cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% endif -%}
+    WORKDIR /usr/local/cuda/samples/1_Utilities/deviceQuery
+    RUN make
+    CMD ./deviceQuery
+EOF
+    docker_build -t "${image}-${BATS_TEST_NAME}" .
+    docker_run --rm --runtime=nvidia ${image}-${BATS_TEST_NAME}
+    [ "$status" -eq 0 ]
+}
+
+@test "vectorAddDrv {
+    cat <<EOF > Dockerfile
+    FROM $image
+    {% if cuda.os.distro == "ubuntu" -%}
+    RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% elif cuda.os.distro == "centos" -%}
+    RUN yum install -y gcc-c++ make cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% endif -%}
+    WORKDIR /usr/local/cuda/samples/0_Simple/vectorAddDrv
+    RUN make
+    CMD ./vectorAddDrv
+EOF
+    docker_build -t "${image}-${BATS_TEST_NAME}" .
+    docker_run --rm --runtime=nvidia ${image}-${BATS_TEST_NAME}
+    [ "$status" -eq 0 ]
+}
+
+@test "matrixMulDrv {
+    cat <<EOF > Dockerfile
+    FROM $image
+    {% if cuda.os.distro == "ubuntu" -%}
+    RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% elif cuda.os.distro == "centos" -%}
+    RUN yum install -y gcc-c++ make cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% endif -%}
+    WORKDIR /usr/local/cuda/samples/0_Simple/matrixMulDrv
+    RUN make
+    CMD ./matrixMulDrv
+EOF
+    docker_build -t "${image}-${BATS_TEST_NAME}" .
+    docker_run --rm --runtime=nvidia ${image}-${BATS_TEST_NAME}
+    [ "$status" -eq 0 ]
+}

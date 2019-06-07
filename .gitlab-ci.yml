@@ -16,20 +16,12 @@ before_script:
   - if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
   - rm -r /root/.cache
   - pip install pipenv
-  - ls -lh
   - pipenv install --system
-  - pip list
-  - OS="$(echo ${CI_JOB_NAME} | cut -f1 -d-)"
-  - echo $OS
-  - OS_NAME="$(echo ${CI_JOB_NAME} | cut -f1 -d-| sed 's/[[:digit:]]*//g')"
-  - echo $OS_NAME
-  - OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/.*\([0-9\.]$\)/\1/p')"
-  - echo $OS_VERSION
-  - echo $CI_JOB_NAME
-  - CUDA_VERSION="$(echo ${CI_JOB_NAME} | cut -f2 -d- | awk -Fv '{ print $2 }')"
-  - CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
-  - echo $CUDNN_VERSION
-  - echo $CUDA_VERSION
+  - export OS="$(echo ${CI_JOB_NAME} | cut -f1 -d-)"
+  - export OS_NAME="$(echo ${CI_JOB_NAME} | cut -f1 -d-| sed 's/[[:digit:]]*//g')"
+  - export OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/.*\([0-9\.]$\)/\1/p')"
+  - export CUDA_VERSION="$(echo ${CI_JOB_NAME} | cut -f2 -d- | awk -Fv '{ print $2 }')"
+  - export CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
   # Build Dockerfiles from templates
   - python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}"
   - if [[ ! -z $NV_CI_INTERNAL ]]; then
@@ -89,14 +81,8 @@ stages:
   stage: test
   <<: *tags_definition
   script:
-    - exit 0
-    - export CUDA_VERSION="${CI_JOB_NAME%-*}"
-    - export CUDA_TEST_VERSION="${CUDA_VERSION:1}"
-    - git clone https://gitlab.com/nvidia/cuda-docker-test.git
-    - cd cuda-docker-test/
-    - git log -1 --pretty=oneline
-    - bash -e ./scripts/bats_install.sh
-    - bash -e ./scripts/run_tests.sh
+    - bash -e ./test/scripts/bats_install.sh
+    - bash -e ./test/scripts/run_tests.sh
 
 .deploy_template: &deploy_definition
   stage: deploy

@@ -125,6 +125,7 @@ class ManagerGenerate(Manager):
     )
 
     cuda = {}
+    output_path = {}
 
     def write_dockerfile(self, template_path, output_path):
         with open(template_path) as f:
@@ -135,6 +136,18 @@ class ManagerGenerate(Manager):
                 dockerfile_output_path.mkdir(parents=True)
             log.info(f"Writing {dockerfile_output_path}/Dockerfile")
             with open(f"{dockerfile_output_path}/Dockerfile", "w") as f2:
+                f2.write(template.render(cuda=self.cuda))
+
+    def write_test(self, template_path, output_path):
+        with open(template_path) as f:
+            basename = template_path.name
+            test_output_path = pathlib.Path(output_path)
+            template = Template(f.read())
+            if not test_output_path.exists():
+                log.debug(f"Creating {test_output_path}")
+                test_output_path.mkdir(parents=True)
+            log.info(f"Writing {test_output_path}/{basename[:-6]}")
+            with open(f"{test_output_path}/{basename[:-6]}", "w") as f2:
                 f2.write(template.render(cuda=self.cuda))
 
     def build_cuda_dict(self):
@@ -191,37 +204,41 @@ class ManagerGenerate(Manager):
             },
         }
 
-    def main(self):
-        log.debug("Have distro: %s version: %s", self.distro, self.distro_version)
-        target = f"{self.distro}{self.distro_version}"
-        output_path = pathlib.Path(f"build/{target}")
-        if output_path.exists:
-            log.debug(f"Removing {output_path}")
-            rm["-rf", output_path]()
-        log.debug(f"Creating {output_path}")
-        output_path.mkdir(parents=True, exist_ok=False)
-
-        self.build_cuda_dict()
-
-        # construct the template object
+    def generate_dockerscripts(self):
         for img in ["base", "devel", "runtime"]:
             # cuda image
             self.write_dockerfile(
                 template_path=f"{self.distro}/{img}/Dockerfile.jinja",
-                output_path=f"{output_path}/{img}",
+                output_path=f"{self.output_path}/{img}",
             )
             # copy files
             for filename in pathlib.Path(f"{self.distro}/{img}").glob("*.*[!jinja]"):
-                log.info(f"Copying {filename} to {output_path}/{img}")
-                shutil.copy(filename, f"{output_path}/{img}")
+                log.info(f"Copying {filename} to {self.output_path}/{img}")
+                shutil.copy(filename, f"{self.output_path}/{img}")
             # cudnn image
             if img in ["runtime", "devel"]:
                 self.cuda["cudnn7"]["target"] = img
                 self.write_dockerfile(
                     template_path=f"{self.distro}/cudnn7/Dockerfile.jinja",
-                    output_path=f"{output_path}/{img}/cudnn7",
+                    output_path=f"{self.output_path}/{img}/cudnn7",
                 )
 
+    def generate_testscripts(self):
+        for filename in pathlib.Path("test").glob("*/*.jinja"):
+            self.write_test(filename, f"{self.output_path}/test")
+
+    def main(self):
+        log.debug("Have distro: %s version: %s", self.distro, self.distro_version)
+        target = f"{self.distro}{self.distro_version}"
+        self.output_path = pathlib.Path(f"build/{target}")
+        if self.output_path.exists:
+            log.debug(f"Removing {self.output_path}")
+            rm["-rf", self.output_path]()
+        log.debug(f"Creating {self.output_path}")
+        self.output_path.mkdir(parents=True, exist_ok=False)
+        self.build_cuda_dict()
+        self.generate_dockerscripts()
+        self.generate_testscripts()
         log.info("Done")
 
 
