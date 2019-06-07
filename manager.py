@@ -97,6 +97,26 @@ class ManagerCheck(Manager):
     DESCRIPTION = "Check for changes."
 
     def main(self):
+        # - python manager.py docker-login
+        # - if [[ ! -z $NV_CI_INTERNAL ]]; then
+        #     export IMAGE_NAME="${REGISTRY}/${IMAGE_NAME}";
+        #     docker login -u "gitlab-ci-token" -p "${CI_JOB_TOKEN}" "gitlab-master.nvidia.com:5005";
+        #     fi
+        # - if [[ ! -z $NVCR_TOKEN ]]; then
+        #     docker login -u "\$oauthtoken" -p "${NVCR_TOKEN}" "nvcr.io/nvidian";
+        #     fi
+        # # Used on gitlab.com to push to docker hub
+        # - if [[ ! -z $REGISTRY_TOKEN ]]; then
+        #     docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
+        #     fi
+        pass
+
+
+@Manager.subcommand("docker-push")
+class ManagerCheck(Manager):
+    DESCRIPTION = "Login and push to the docker registries"
+
+    def main(self):
         pass
 
 
@@ -179,6 +199,7 @@ class ManagerGenerate(Manager):
                 ),
             ),
             "os": {"distro": self.distro, "version": self.distro_version},
+            "arch": "x86_64",
             "cudnn7": {
                 "version": glom.glom(
                     conf,
@@ -203,6 +224,7 @@ class ManagerGenerate(Manager):
                 "target": "",
             },
         }
+        log.debug("cuda version %s", glom.glom(self.cuda, glom.Path("version")))
 
     def generate_dockerscripts(self):
         for img in ["base", "devel", "runtime"]:
@@ -223,14 +245,27 @@ class ManagerGenerate(Manager):
                     output_path=f"{self.output_path}/{img}/cudnn7",
                 )
 
+    def supported_distro_list(self):
+        rgx = re.compile(r"[a-z]+[\d+\.]+")
+        ls = []
+        for key in self.parent.manifest.keys():
+            match = rgx.match(key)
+            if match:
+                ls.append(key)
+        return ls
+
     def generate_testscripts(self):
         for filename in pathlib.Path("test").glob("*/*.jinja"):
+            # Check for distro specific tests
+            if any(distro in str(filename) for distro in self.supported_distro_list()):
+                if not self.distro in str(filename):
+                    continue
             self.write_test(filename, f"{self.output_path}/test")
 
     def main(self):
         log.debug("Have distro: %s version: %s", self.distro, self.distro_version)
         target = f"{self.distro}{self.distro_version}"
-        self.output_path = pathlib.Path(f"build/{target}")
+        self.output_path = pathlib.Path(f"build/{target}/{self.cuda_version}")
         if self.output_path.exists:
             log.debug(f"Removing {self.output_path}")
             rm["-rf", self.output_path]()

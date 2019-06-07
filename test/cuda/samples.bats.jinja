@@ -2,7 +2,7 @@
 
 load helpers
 
-image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-devel-${OS}"
+image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-devel-${OS}${IMAGE_TAG_SUFFIX}"
 
 function setup() {
     check_runtime
@@ -18,9 +18,9 @@ function teardown() {
     {% if cuda.os.distro == "ubuntu" -%}
     RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
     {% elif cuda.os.distro == "centos" -%}
-    RUN yum install -y gcc-c++ make cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
     {% endif -%}
-    WORKDIR /usr/local/cuda/samples/1_Utilities/deviceQuery
+    WORKDIR /usr/local/cuda-{{ cuda.version.major }}.{{ cuda.version.minor }}/samples/1_Utilities/deviceQuery
     RUN make
     CMD ./deviceQuery
 EOF

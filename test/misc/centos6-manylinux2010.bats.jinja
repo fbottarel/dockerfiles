@@ -1,0 +1,51 @@
+#!/usr/bin/env bats
+
+load helpers
+
+image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-devel-${OS}${IMAGE_TAG_SUFFIX}"
+
+function setup() {
+    check_runtime
+}
+
+function teardown() {
+    cleanup
+}
+
+@test "manylinux2010_x86_64" {
+    cat <<EOF > Dockerfile
+    FROM ${image}
+    ARG PLAT="manylinux2010_x86_64"
+    # ENV AUDITWHEEL_PLAT=\$PLAT
+    # ENV LC_ALL en_US.UTF-8
+    # ENV LANG en_US.UTF-8
+    # ENV LANGUAGE en_US.UTF-8
+    # ENV PATH /opt/rh/devtoolset-8/root/usr/bin:$PATH
+    # ENV LD_LIBRARY_PATH /opt/rh/devtoolset-8/root/usr/lib64:/opt/rh/devtoolset-8/root/usr/lib:/opt/rh/devtoolset-8/root/usr/lib64/dyninst:/opt/rh/devtoolset-8/root/usr/lib/dyninst:/usr/local/lib64:/usr/local/lib
+    # ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
+
+    # RUN wget http://python.org/ftp/python/3.6.3/Python-3.6.3.tar.xz && tar xf Python-3.6.3.tar.xz
+    # RUN cd Python-3.6.3 && ./configure --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib" && make && make altinstall
+
+    RUN yum install -y git atlas-devel xz wget zlib-devel epel-release
+    RUN yum install -y python34 python34-devel python34-setuptools patchelf unzip
+    RUN yum groupinstall -y 'Development Tools'
+    RUN wget https://bootstrap.pypa.io/get-pip.py
+    RUN /usr/bin/python3.4 get-pip.py
+
+    RUN git clone https://github.com/pypa/python-manylinux-demo.git /manylinux
+    WORKDIR /manylinux
+    RUN pip install -r dev-requirements.txt
+    RUN pip install auditwheel
+    RUN sed -i 's/cblas/satlas/g' setup.py
+    #ENV LDFLAGS "-L/usr/lib64/atlas -lsatlas"
+    RUN mkdir -p wheelhouse && pip wheel -v -w wheelhouse/ ./
+    # RUN for whl in wheelhouse/*.whl; do auditwheel repair "\$whl" --plat \$PLAT -w ./wheelhouse/; done
+    # RUN pip install python-manylinux-demo --no-index -f wheelhouse
+    # WORKDIR $HOME
+    # CMD "nosetests" -v pymanylinuxdemo
+EOF
+    docker_build -t "${image}-${BATS_TEST_NAME}" .
+    docker_run --runtime=nvidia ${image}-${BATS_TEST_NAME}
+    [ "$status" -eq 0 ]
+}

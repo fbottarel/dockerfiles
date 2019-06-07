@@ -4,16 +4,6 @@ arch:
   - x86_64
   - ppc64le
 
-ubuntu:
-  - os_version: 18.04
-    cudnn7_version: 7.6.0.64
-  - os_version: 16.04
-    cudnn7_version: 7.6.0.64
-  - os_version: 14.04
-    cudnn7_version: 7.6.0.64
-    arch:
-      ppc64le: false
-
 .centos-cudnn7: &centos_cudnn7_definition
   version: 7.6.0.64
   sha256sum: e956c6f9222fcb867a10449cfc76dee5cfd7c7531021d95fe9586d7e043b57d7
@@ -29,6 +19,12 @@ centos6:
   arch:
     ppc64le: false
   cuda:
+    v10.0:
+      build_version: 130
+      cuda_requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
+      cudnn7:
+        version: "7.6.0.64"
+        sha256sum: "c4e1ee4168f4cadabaa989487a47bed09f34d34e35398b6084a2699d11bd2560"
     v10.1:
       build_version: 168
       cuda_requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"

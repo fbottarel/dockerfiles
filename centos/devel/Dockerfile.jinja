@@ -1,6 +1,6 @@
 ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:10.1-runtime-centos7
-LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 RUN yum install -y \
         cuda-libraries-dev-$CUDA_PKG_VERSION \

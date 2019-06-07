@@ -1,6 +1,6 @@
 ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-base-centos{{ cuda.os.version }}
-LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 RUN yum install -y \
         cuda-libraries-$CUDA_PKG_VERSION \

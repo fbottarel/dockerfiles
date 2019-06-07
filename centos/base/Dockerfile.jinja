@@ -1,10 +1,59 @@
-{% if cuda.os.version == "6" -%}
-# manylinux2010 compliant centos6 base image endorsed by redhat
-FROM quay.io/pypa/manylinux2010_x86_64:latest
+{% if cuda.os.version == "6" and cuda.arch == "x86_64" -%}
+FROM centos:6 as centos-with-vsyscall
+
+# make the image manylinux2010 compliant
+RUN yum install -y git
+RUN git clone https://github.com/pypa/manylinux.git /manylinux
+RUN bash /manylinux/docker/glibc/build_scripts/rebuild-glibc-without-vsyscall.sh
+
+FROM centos:6
+
+COPY --from=centos-with-vsyscall \
+    /rpms/glibc-2.12-1.212.1.el6.x86_64.rpm \
+    /rpms/glibc-common-2.12-1.212.1.el6.x86_64.rpm \
+    #/rpms/glibc-debuginfo-2.12-1.212.1.el6.x86_64.rpm \
+    #/rpms/glibc-debuginfo-common-2.12-1.212.1.el6.x86_64.rpm \
+    /rpms/glibc-devel-2.12-1.212.1.el6.x86_64.rpm \
+    /rpms/glibc-headers-2.12-1.212.1.el6.x86_64.rpm \
+    /rpms/glibc-static-2.12-1.212.1.el6.x86_64.rpm \
+    /rpms/glibc-utils-2.12-1.212.1.el6.x86_64.rpm \
+    /rpms/nscd-2.12-1.212.1.el6.x86_64.rpm \
+    /rpms/
+
+RUN yum -y install /rpms/* && rm -rf /rpms && yum -y clean all && rm -rf /var/cache/yum/* && \
+    # if we updated glibc, we need to strip locales again...
+    localedef --list-archive | grep -v -i ^en_US.utf8 | xargs localedef --delete-from-archive && \
+    mv -f /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl && \
+    build-locale-archive && \
+    find /usr/share/locale -mindepth 1 -maxdepth 1 -not \( -name 'en*' -or -name 'locale.alias' \) | xargs rm -rf
+
+# FROM centos-with-patched-glibc
+# ENV AUDITWHEEL_PLAT manylinux2010_x86_64
+# ENV LC_ALL en_US.UTF-8
+# ENV LANG en_US.UTF-8
+# ENV LANGUAGE en_US.UTF-8
+# ENV PATH /opt/rh/devtoolset-8/root/usr/bin:$PATH
+# ENV LD_LIBRARY_PATH /opt/rh/devtoolset-8/root/usr/lib64:/opt/rh/devtoolset-8/root/usr/lib:/opt/rh/devtoolset-8/root/usr/lib64/dyninst:/opt/rh/devtoolset-8/root/usr/lib/dyninst:/usr/local/lib64:/usr/local/lib
+# ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
+# COPY --from=centos-with-vsyscall /manylinux/docker/build_scripts /build_scripts
+# RUN sed -i "$(($(wc -l < /build_scripts/build.sh)-7)),\$d" /build_scripts/build.sh
+# RUN bash /build_scripts/build.sh && rm -rf /build_scripts
+#
+# # Running this from within "bash build.sh" results in "Bus error (core dumped)" from build-locale-archive
+# # if we updated glibc, we need to strip locales again...
+# RUN localedef --list-archive | grep -v -i ^en_US.utf8 | xargs localedef --delete-from-archive
+# RUN mv -f /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl
+# RUN build-locale-archive
+# RUN find /usr/share/locale -mindepth 1 -maxdepth 1 -not \( -name 'en*' -or -name 'locale.alias' \) | xargs rm -rf
+# RUN find /usr/local/share/locale -mindepth 1 -maxdepth 1 -not \( -name 'en*' -or -name 'locale.alias' \) | xargs rm -rf
+# RUN rm -rf /usr/local/share/man
+#
+# ENV SSL_CERT_FILE=/opt/_internal/certs.pem
 {% else -%}
 FROM {{ cuda.os.distro }}:{{ cuda.os.version }}
 {% endif -%}
-LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
     curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/rhel{{ cuda.os.version }}/x86_64/7fa2af80.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \

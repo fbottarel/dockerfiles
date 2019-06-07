@@ -32,6 +32,7 @@ before_script:
     fi
   - docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
 
+
 stages:
   # trigger stage is a workaround until https://gitlab.com/gitlab-org/gitlab-ce/issues/22972 is implemented
   # - trigger
@@ -48,33 +49,33 @@ stages:
   stage: cuda
   <<: *tags_definition
   script:
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "build/${OS}/base"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}"
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/runtime"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}"
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/devel"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "build/${OS}/${CUDA_VERSION}/base"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/runtime"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/devel"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-base";
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-base";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
       fi
     - if [[ "${LATEST}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:latest";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:latest";
       fi
 
 .cudnn_template: &cudnn_definition
   stage: cudnn
   <<: *tags_definition
   script:
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "build/${OS}/runtime/${CUDNN_VERSION}"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}"
+                   "build/${OS}/${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "build/${OS}/devel/${CUDNN_VERSION}"
+                   "build/${OS}/${CUDA_VERSION}/devel/${CUDNN_VERSION}"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime";
+        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel";
       fi
 
 .test_template: &test_definition
@@ -88,25 +89,49 @@ stages:
   stage: deploy
   <<: *tags_definition
   script:
-    - docker images | grep "${IMAGE_NAME}\ *${CUDA_VERSION}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
+    - docker images | grep "${IMAGE_NAME}\ *${CUDA_VERSION}.*${IMAGE_TAG_SUFFIX}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
     - if [[ ! -z $LATEST ]]; then
         docker push ${IMAGE_NAME}:latest;
       fi
 
+centos6-v10.0:
+  variables:
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  <<: *cuda_base_definition
+
+centos6-v10.0-cudnn7:
+  variables:
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  <<: *cudnn_definition
+
+centos6-v10.0-test:
+  variables:
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  <<: *test_definition
+
+centos6-v10.0-deploy:
+  variables:
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  <<: *deploy_definition
+
 centos6-v10.1:
+  variables:
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
   <<: *cuda_base_definition
 
 centos6-v10.1-cudnn7:
   variables:
-    NO_OS_SUFFIX: "true"
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
   <<: *cudnn_definition
 
 centos6-v10.1-test:
+  variables:
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
   <<: *test_definition
 
 centos6-v10.1-deploy:
   variables:
-    LATEST: "true"
+    IMAGE_TAG_SUFFIX: "-patched-glibc"
   <<: *deploy_definition
 
 # centos7-v10.1:

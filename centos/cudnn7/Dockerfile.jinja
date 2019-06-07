@@ -1,6 +1,6 @@
 ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn7.target }}-centos{{ cuda.os.version }}
-LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 ENV CUDNN_VERSION {{ cuda.cudnn7.version }}
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"

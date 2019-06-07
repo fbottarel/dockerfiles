@@ -3,7 +3,7 @@
 load helpers
 
 
-image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-devel-${OS}"
+image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-devel-${OS}${IMAGE_TAG_SUFFIX}"
 
 function setup() {
     check_runtime
