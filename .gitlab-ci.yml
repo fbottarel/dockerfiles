@@ -24,13 +24,19 @@ before_script:
   - export CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
   # Build Dockerfiles from templates
   - python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}"
+  - export REPO=()
   - if [[ ! -z $NV_CI_INTERNAL ]]; then
-      export REGISTRY="gitlab-master.nvidia.com:5005";
-      export REGISTRY_USER="gitlab-ci-token";
-      export REGISTRY_TOKEN="${CI_JOB_TOKEN}";
-      export IMAGE_NAME="${REGISTRY}/${IMAGE_NAME}";
+      REPO+=\("gitlab-master.nvidia.com:5005/${IMAGE_NAME}"\);
+      docker login -u "gitlab-ci-token" -p "${CI_JOB_TOKEN}" "gitlab-master.nvidia.com:5005";
     fi
-  - docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
+  - if [[ ! -z $NVCR_TOKEN ]]; then
+      REPO+=\("nvcr.io/nvidian/${IMAGE_NAME}"\);
+      docker login -u "\$oauthtoken" -p "${NVCR_TOKEN}" "nvcr.io";
+    fi
+  - if [[ ! -z $REGISTRY_TOKEN ]]; then
+      REPO+=\("${REGISTRY}/${IMAGE_NAME}"\);
+      echo docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
+    fi
 
 
 stages:
@@ -49,6 +55,9 @@ stages:
   stage: cuda
   <<: *tags_definition
   script:
+    # docker hub
+    - echo ${REPOS[@]}
+    - exit 1
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "build/${OS}/${CUDA_VERSION}/base"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/runtime"
@@ -89,7 +98,7 @@ stages:
   stage: deploy
   <<: *tags_definition
   script:
-    - docker images | grep "${IMAGE_NAME}\ *${CUDA_VERSION}.*${IMAGE_TAG_SUFFIX}" | grep "\(${OS}\ \|-base\ \|-devel\ \|-runtime\ \)" | awk '{ print $1":"$2 }' | xargs -L1 docker push;
+    - docker images | grep "${IMAGE_NAME}\ *${CUDA_VERSION}.*${IMAGE_TAG_SUFFIX}" | grep "\(${OS}${IMAGE_TAG_SUFFIX}\ \|-base\ \|-devel\ \|-runtime\ \)" | grep -v '\-test_' | awk '{ print $1":"$2 }' | xargs -L1 docker push;
     - if [[ ! -z $LATEST ]]; then
         docker push ${IMAGE_NAME}:latest;
       fi
@@ -104,35 +113,35 @@ centos6-v10.0-cudnn7:
     IMAGE_TAG_SUFFIX: "-patched-glibc"
   <<: *cudnn_definition
 
-centos6-v10.0-test:
-  variables:
-    IMAGE_TAG_SUFFIX: "-patched-glibc"
-  <<: *test_definition
-
-centos6-v10.0-deploy:
-  variables:
-    IMAGE_TAG_SUFFIX: "-patched-glibc"
-  <<: *deploy_definition
-
-centos6-v10.1:
-  variables:
-    IMAGE_TAG_SUFFIX: "-patched-glibc"
-  <<: *cuda_base_definition
-
-centos6-v10.1-cudnn7:
-  variables:
-    IMAGE_TAG_SUFFIX: "-patched-glibc"
-  <<: *cudnn_definition
-
-centos6-v10.1-test:
-  variables:
-    IMAGE_TAG_SUFFIX: "-patched-glibc"
-  <<: *test_definition
-
-centos6-v10.1-deploy:
-  variables:
-    IMAGE_TAG_SUFFIX: "-patched-glibc"
-  <<: *deploy_definition
+  #centos6-v10.0-test:
+  #  variables:
+  #    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  #  <<: *test_definition
+  #
+  #centos6-v10.0-deploy:
+  #  variables:
+  #    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  #  <<: *deploy_definition
+  #
+  #centos6-v10.1:
+  #  variables:
+  #    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  #  <<: *cuda_base_definition
+  #
+  #centos6-v10.1-cudnn7:
+  #  variables:
+  #    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  #  <<: *cudnn_definition
+  #
+  #centos6-v10.1-test:
+  #  variables:
+  #    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  #  <<: *test_definition
+  #
+  #centos6-v10.1-deploy:
+  #  variables:
+  #    IMAGE_TAG_SUFFIX: "-patched-glibc"
+  #  <<: *deploy_definition
 
 # centos7-v10.1:
   # <<: *cuda_base_definition

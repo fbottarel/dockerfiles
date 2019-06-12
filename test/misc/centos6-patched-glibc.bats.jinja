@@ -37,7 +37,7 @@ function teardown() {
     WORKDIR /manylinux
     RUN pip install -r dev-requirements.txt
     RUN pip install auditwheel
-    RUN sed -i 's/cblas/satlas/g' setup.py
+    #RUN sed -i 's/cblas/satlas/g' setup.py
     #ENV LDFLAGS "-L/usr/lib64/atlas -lsatlas"
     RUN mkdir -p wheelhouse && pip wheel -v -w wheelhouse/ ./
     # RUN for whl in wheelhouse/*.whl; do auditwheel repair "\$whl" --plat \$PLAT -w ./wheelhouse/; done
@@ -46,6 +46,6 @@ function teardown() {
     # CMD "nosetests" -v pymanylinuxdemo
 EOF
     docker_build -t "${image}-${BATS_TEST_NAME}" .
-    docker_run --runtime=nvidia ${image}-${BATS_TEST_NAME}
+    docker_run --rm --runtime=nvidia ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
 }

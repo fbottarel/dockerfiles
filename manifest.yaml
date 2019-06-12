@@ -19,6 +19,7 @@ centos6:
   arch:
     ppc64le: false
   cuda:
+    repo_url: "http://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64"
     v10.0:
       build_version: 130
       cuda_requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"

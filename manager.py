@@ -147,15 +147,16 @@ class ManagerGenerate(Manager):
     cuda = {}
     output_path = {}
 
-    def write_dockerfile(self, template_path, output_path):
+    def output_template(self, template_path, output_path):
         with open(template_path) as f:
-            dockerfile_output_path = pathlib.Path(output_path)
+            new_output_path = pathlib.Path(output_path)
+            new_filename = template_path.name[:-6]
             template = Template(f.read())
-            if not dockerfile_output_path.exists():
-                log.debug(f"Creating {dockerfile_output_path}")
-                dockerfile_output_path.mkdir(parents=True)
-            log.info(f"Writing {dockerfile_output_path}/Dockerfile")
-            with open(f"{dockerfile_output_path}/Dockerfile", "w") as f2:
+            if not new_output_path.exists():
+                log.debug(f"Creating {new_output_path}")
+                new_output_path.mkdir(parents=True)
+            log.info(f"Writing {new_output_path}/{new_filename}")
+            with open(f"{new_output_path}/{new_filename}", "w") as f2:
                 f2.write(template.render(cuda=self.cuda))
 
     def write_test(self, template_path, output_path):
@@ -184,6 +185,11 @@ class ManagerGenerate(Manager):
             ),
         )
         self.cuda = {
+            "tag_suffix": os.getenv("IMAGE_TAG_SUFFIX"),
+            "repo_url": glom.glom(
+                conf,
+                glom.Path(f"{self.distro}{self.distro_version}", "cuda", "repo_url"),
+            ),
             "version": {
                 "full": f"{self.cuda_version}.{build_version}",
                 "major": major,
@@ -229,20 +235,27 @@ class ManagerGenerate(Manager):
     def generate_dockerscripts(self):
         for img in ["base", "devel", "runtime"]:
             # cuda image
-            self.write_dockerfile(
-                template_path=f"{self.distro}/{img}/Dockerfile.jinja",
-                output_path=f"{self.output_path}/{img}",
+            self.output_template(
+                template_path=pathlib.Path(f"{self.distro}/{img}/Dockerfile.jinja"),
+                output_path=pathlib.Path(f"{self.output_path}/{img}"),
             )
             # copy files
-            for filename in pathlib.Path(f"{self.distro}/{img}").glob("*.*[!jinja]"):
-                log.info(f"Copying {filename} to {self.output_path}/{img}")
-                shutil.copy(filename, f"{self.output_path}/{img}")
+            for filename in pathlib.Path(f"{self.distro}/{img}").glob(
+                "*[!Dockerfile].*"
+            ):
+                if ".jinja" in filename.name:
+                    self.output_template(filename, f"{self.output_path}/{img}")
+                else:
+                    log.info(f"Copying {filename} to {self.output_path}/{img}")
+                    shutil.copy(filename, f"{self.output_path}/{img}")
             # cudnn image
             if img in ["runtime", "devel"]:
                 self.cuda["cudnn7"]["target"] = img
-                self.write_dockerfile(
-                    template_path=f"{self.distro}/cudnn7/Dockerfile.jinja",
-                    output_path=f"{self.output_path}/{img}/cudnn7",
+                self.output_template(
+                    template_path=pathlib.Path(
+                        f"{self.distro}/cudnn7/Dockerfile.jinja"
+                    ),
+                    output_path=pathlib.Path(f"{self.output_path}/{img}/cudnn7"),
                 )
 
     def supported_distro_list(self):
