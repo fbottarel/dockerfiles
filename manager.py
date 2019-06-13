@@ -17,6 +17,7 @@ import logging
 import logging.config
 import shutil
 import glob
+import sys
 
 import jinja2
 from jinja2 import Template
@@ -26,6 +27,8 @@ from plumbum.cmd import rm
 import yaml
 
 import glom
+
+import docker
 
 
 log = logging.getLogger()
@@ -41,15 +44,9 @@ class Manager(cli.Application):
     ci = None
     changed = False
 
-    # FIXME: implement dry-run
-    #  dry_run = cli.Flag(["--dry-run"], help="Run without making changes")
-
     def _load_manifest_yaml(self):
         with open("manifest.yaml", "r") as f:
             self.manifest = yaml.load(f, yaml.Loader)
-            #  import pprint
-
-            #  pprint.pprint(self.manifest)
 
     def _load_ci_yaml(self):
         with open(".gitlab-ci.yml", "r") as f:
@@ -81,15 +78,6 @@ class Manager(cli.Application):
             return 1
         log.info("cuda ci manager start")
         self._load_yaml()
-        #  self._check_for_changes()
-        #  if self.changed:
-        #  self.triggered()
-
-        # rgx = re.compile(r"^(\w+)-v([\d\.]+)")
-        # for key in self.ci:
-        #     match = rgx.match(key)
-        #     if match and len(match.groups()) > 1:
-        #         print(match.group(1), match.group(2))
 
 
 @Manager.subcommand("check")
@@ -113,23 +101,129 @@ class ManagerCheck(Manager):
 
 
 @Manager.subcommand("docker-push")
-class ManagerCheck(Manager):
+class ManagerDockerPush(Manager):
     DESCRIPTION = "Login and push to the docker registries"
 
+    image_name = cli.SwitchAttr(
+        "--image-name", str, help="The image name to tag", default=None, mandatory=True
+    )
+
+    distro = cli.SwitchAttr(
+        "--os", str, help="The distro to use.", default=None, mandatory=True
+    )
+
+    distro_version = cli.SwitchAttr(
+        "--os-version", str, help="The distro version", default=None, mandatory=True
+    )
+
+    latest = cli.Flag("--push-latest", help="The distro version")
+    dry_run = cli.Flag(["-n", "--dry-run"], help="Show output but don't do anything!")
+
+    cuda_version = cli.SwitchAttr(
+        "--cuda-version",
+        str,
+        help="The cuda version to use. Example: '10.1'",
+        default=None,
+        mandatory=True,
+    )
+
+    tag_suffix = cli.SwitchAttr(
+        "--tag-suffix",
+        str,
+        help="The suffix to append to the tag name. Example 10.1-base-centos6<suffix>",
+        default=None,
+    )
+    client = None
+    repos = []
+    tags = []
+
+    def _docker_login(self):
+        # FIXME: move metadata to manifest and simplify this function
+        if os.getenv("NVCR_TOKEN"):
+            registry = "nvcr.io/nvidian"
+            if self.client.login(
+                username="$oauthtoken",
+                password=os.getenv("NVCR_TOKEN"),
+                registry=registry,
+            ):
+                self.repos.append(registry)
+                log.info("Logged into %s", registry)
+        if os.getenv("REGISTRY_TOKEN"):
+            registry = "docker.io"
+            if self.client.login(
+                username=os.getenv("REGISTRY_USER"),
+                password=os.getenv("REGISTRY_TOKEN"),
+                registry=registry,
+            ):
+                self.repos.append(registry)
+                log.info("Logged into %s", registry)
+        if os.getenv("NV_CI_INTERNAL"):
+            registry = "gitlab-master.nvidia.com:5005"
+            if self.client.login(
+                username="gitlab-ci-token",
+                password=os.getenv("CI_JOB_TOKEN"),
+                registry=registry,
+            ):
+                self.repos.append(registry)
+                log.info("Logged into %s", registry)
+        if not self.repos:
+            log.fatal(
+                "Docker login failed! Did not log into any repositories. Environment not set?"
+            )
+            sys.exit(1)
+
+    def _push_images(self):
+        for img in self.client.images.list(
+            name=self.image_name, filters={"dangling": False}
+        ):
+            log.info("Processing image: %s, id: %s", img.tags, img.short_id)
+            match = all(
+                key in str(img.tags)
+                for key in [
+                    self.cuda_version,
+                    f"{self.distro}{self.distro_version}",
+                    self.tag_suffix,
+                ]
+            )
+            if self.latest and "latest" in img.tags:
+                match = True
+            log.debug("tag: %s, match: %s", img, match)
+            for repo in self.repos:
+                tag = img.tags[0].split(":")[1]
+                new_repo = "{}/{}".format(repo, img.tags[0].split(":")[0])
+                if self.dry_run:
+                    log.info(
+                        "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, False
+                    )
+                    log.info("Would have pushed: %s:%s", new_repo, tag)
+                else:
+                    tagged = img.tag(new_repo, tag)
+                    log.info(
+                        "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, tagged
+                    )
+                    if tagged:
+                        for line in self.client.images.push(
+                            new_repo, tag, stream=True, decode=True
+                        ):
+                            log.info(line)
+
     def main(self):
-        pass
+        log.debug("dry-run: %s", self.dry_run)
+        self.client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+        self._docker_login()
+        self._push_images()
+        log.info("Done")
 
 
 @Manager.subcommand("generate")
 class ManagerGenerate(Manager):
     DESCRIPTION = "Generate Dockerfiles from templates."
 
+    cuda = {}
+    output_path = {}
+
     distro = cli.SwitchAttr(
-        "--os",
-        str,
-        help="The distro to generate Dockerfiles for",
-        default=None,
-        mandatory=True,
+        "--os", str, help="The distro to use.", default=None, mandatory=True
     )
 
     distro_version = cli.SwitchAttr(
@@ -139,13 +233,10 @@ class ManagerGenerate(Manager):
     cuda_version = cli.SwitchAttr(
         "--cuda-version",
         str,
-        help="The cuda version to generate scripts for. Example: '10.1'",
+        help="The cuda version to use. Example: '10.1'",
         default=None,
         mandatory=True,
     )
-
-    cuda = {}
-    output_path = {}
 
     def output_template(self, template_path, output_path):
         with open(template_path) as f:

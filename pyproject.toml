@@ -5,7 +5,7 @@ description = "CUDA Docker CI Scripts"
 authors = ["Jesus Alvarez <jesusa@nvidia.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">3.6"
 pyyaml = "*"
 plumbum = "*"
 jinja2 = "*"
@@ -14,4 +14,4 @@ glom = "*"
 docker = "*"
 
 [tool.poetry.dev-dependencies]
-pytest = "^3.7"
+pytest = ">3.6"
