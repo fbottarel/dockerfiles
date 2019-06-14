@@ -126,32 +126,21 @@ class ManagerDockerPush(Manager):
     tags = []
 
     def _docker_login(self):
-        # FIXME: move metadata to manifest and simplify this function
-        if os.getenv("NVCR_TOKEN"):
-            registry = "nvcr.io/nvidian"
-            if self.client.login(
-                username="$oauthtoken",
-                password=os.getenv("NVCR_TOKEN"),
-                registry=registry,
+        manifest = self.parent.manifest["docker_repos"]
+        for repo in manifest:
+            if manifest[repo].get("only_if", False) and not os.getenv(
+                manifest[repo]["only_if"]
             ):
-                self.repos.append(registry)
-                log.info("Logged into %s", registry)
-        if os.getenv("REGISTRY_TOKEN"):
-            registry = "docker.io"
-            if self.client.login(
-                username=os.getenv("REGISTRY_USER"),
-                password=os.getenv("REGISTRY_TOKEN"),
-                registry=registry,
-            ):
-                self.repos.append(registry)
-                log.info("Logged into %s", registry)
-        if os.getenv("NV_CI_INTERNAL"):
-            registry = "gitlab-master.nvidia.com:5005"
-            if self.client.login(
-                username="gitlab-ci-token",
-                password=os.getenv("CI_JOB_TOKEN"),
-                registry=registry,
-            ):
+                log.debug("repo: '%s' only_if requirement not satisfied", repo)
+                continue
+            user = os.getenv(manifest[repo]["user"])
+            passwd = os.getenv(manifest[repo]["pass"])
+            if not user:
+                user = manifest[repo]["user"]
+            if not passwd:
+                passwd = manifest[repo]["pass"]
+            registry = manifest[repo]["registry"]
+            if self.client.login(username=user, password=passwd, registry=registry):
                 self.repos.append(registry)
                 log.info("Logged into %s", registry)
         if not self.repos:

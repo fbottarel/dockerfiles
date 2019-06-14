@@ -4,6 +4,23 @@ arch:
   - x86_64
   - ppc64le
 
+docker_repos:
+  docker.io:
+    only_if: REGISTRY_TOKEN
+    pass: REGISTRY_TOKEN
+    user: REGISTRY_USER
+    registry: docker.io
+  nvcr.io:
+    only_if: NVCR_TOKEN
+    pass: NVCR_TOKEN
+    user: $oauthtoken
+    registry: nvcr.io/nvidian
+  gitlab-internal:
+    only_if: NV_CI_INTERNAL
+    user: "gitlab-ci-token"
+    pass: CI_JOB_TOKEN
+    registry: gitlab-master.nvidia.com:5005
+
 .centos-cudnn7: &centos_cudnn7_definition
   version: 7.6.0.64
   sha256sum: e956c6f9222fcb867a10449cfc76dee5cfd7c7531021d95fe9586d7e043b57d7
