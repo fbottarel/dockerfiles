@@ -22,6 +22,14 @@ before_script:
   - export OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/.*\([0-9\.]$\)/\1/p')"
   - export CUDA_VERSION="$(echo ${CI_JOB_NAME} | cut -f2 -d- | awk -Fv '{ print $2 }')"
   - export CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
+  - export IMAGE_TAG_SUFFIX="$(echo $CI_JOB_NAME | awk -f image-suffix.awk)"
+  - 'echo "OS: $OS"'
+  - 'echo "OS_NAME: $OS_NAME"'
+  - 'echo "OS_VERSION: $OS_VERSION"'
+  - 'echo "CUDA_VERSION: $CUDA_VERSION"'
+  - 'echo "CUDNN_VERSION: $CUDNN_VERSION"'
+  - 'echo "IMAGE_TAG_SUFFIX: $IMAGE_TAG_SUFFIX"'
+  - python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}" ${IMAGE_TAG_SUFFIX:+--tag-suffix $IMAGE_TAG_SUFFIX}
 
 stages:
   # trigger stage is a workaround until https://gitlab.com/gitlab-org/gitlab-ce/issues/22972 is implemented
@@ -39,7 +47,6 @@ stages:
   stage: cuda
   <<: *tags_definition
   script:
-    - python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "build/${OS}/${CUDA_VERSION}/base"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/runtime"
@@ -58,7 +65,6 @@ stages:
   stage: cudnn
   <<: *tags_definition
   script:
-    - python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
                    "build/${OS}/${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
@@ -88,59 +94,85 @@ stages:
         --cuda-version "${CUDA_VERSION}"
         --tag-suffix "${IMAGE_TAG_SUFFIX}" ${LATEST:+"--latest"} -n
 
-# centos6-v10.0:
-  # variables:
-    # IMAGE_TAG_SUFFIX: "-patched-glibc"
-  # <<: *cuda_base_definition
+#
+# FIXME: move variables to the manifest
+#
+centos6-v10.1:
+  <<: *cuda_base_definition
 
-# centos6-v10.0-cudnn7:
-  # variables:
-    # IMAGE_TAG_SUFFIX: "-patched-glibc"
-  # <<: *cudnn_definition
+centos6-v10.1-cudnn7:
+  <<: *cudnn_definition
 
-# centos6-v10.0-test:
-  # variables:
-    # IMAGE_TAG_SUFFIX: "-patched-glibc"
-  # <<: *test_definition
+centos6-v10.1-test:
+  <<: *test_definition
 
-centos6-v10.0-deploy:
-  variables:
-    IMAGE_TAG_SUFFIX: "-patched-glibc"
+centos6-v10.1-deploy:
   <<: *deploy_definition
 
-# centos6-v10.1:
-  # variables:
-    # IMAGE_TAG_SUFFIX: "-patched-glibc"
-  # <<: *cuda_base_definition
+centos6-v10.0:
+  <<: *cuda_base_definition
 
-# centos6-v10.1-cudnn7:
-  # variables:
-    # IMAGE_TAG_SUFFIX: "-patched-glibc"
-  # <<: *cudnn_definition
+centos6-v10.0-cudnn7:
+  <<: *cudnn_definition
 
-# centos6-v10.1-test:
-  # variables:
-    # IMAGE_TAG_SUFFIX: "-patched-glibc"
-  # <<: *test_definition
+centos6-v10.0-test:
+  <<: *test_definition
 
-# centos6-v10.1-deploy:
-  # variables:
-    # IMAGE_TAG_SUFFIX: "-patched-glibc"
-  # <<: *deploy_definition
+centos6-v10.0-deploy:
+  <<: *deploy_definition
 
-# centos7-v10.1:
-  # <<: *cuda_base_definition
+centos6-v10.1-patched-glibc:
+  <<: *cuda_base_definition
 
-# centos7-v10.1-cudnn7:
-  # variables:
-    # NO_OS_SUFFIX: "true"
-  # <<: *cudnn_definition
+centos6-v10.1-cudnn7-patched-glibc:
+  <<: *cudnn_definition
 
-# centos7-v10.1-test:
-  # <<: *test_definition
+centos6-v10.1-test-patched-glibc:
+  <<: *test_definition
 
-# centos7-v10.1-deploy:
-  # variables:
-    # LATEST: "true"
-  # <<: *deploy_definition
+centos6-v10.1-deploy-patched-glibc:
+  <<: *deploy_definition
+
+centos6-v10.0-patched-glibc:
+  <<: *cuda_base_definition
+
+centos6-v10.0-cudnn7-patched-glibc:
+  <<: *cudnn_definition
+
+centos6-v10.0-test-patched-glibc:
+  <<: *test_definition
+
+centos6-v10.0-deploy-patched-glibc:
+  <<: *deploy_definition
+
+centos7-v10.1:
+  variables:
+    LATEST: "true"
+    NO_OS_SUFFIX: "true"
+  <<: *cuda_base_definition
+
+centos7-v10.1-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
+  <<: *cudnn_definition
+
+centos7-v10.1-test:
+  <<: *test_definition
+
+centos7-v10.1-deploy:
+  variables:
+    LATEST: "true"
+  <<: *deploy_definition
+
+centos7-v10.0:
+  <<: *cuda_base_definition
+
+centos7-v10.0-cudnn7:
+  <<: *cudnn_definition
+
+centos7-v10.0-test:
+  <<: *test_definition
+
+centos7-v10.0-deploy:
+  <<: *deploy_definition
 

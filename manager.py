@@ -4,12 +4,6 @@
 
 """Dockerfile template injector and pipeline trigger."""
 
-# Dependencies:
-# pip install pipenv
-# pipenv install
-# pipenv shell
-# python manager.py
-
 import re
 import os
 import pathlib
@@ -85,18 +79,6 @@ class ManagerCheck(Manager):
     DESCRIPTION = "Check for changes."
 
     def main(self):
-        # - python manager.py docker-login
-        # - if [[ ! -z $NV_CI_INTERNAL ]]; then
-        #     export IMAGE_NAME="${REGISTRY}/${IMAGE_NAME}";
-        #     docker login -u "gitlab-ci-token" -p "${CI_JOB_TOKEN}" "gitlab-master.nvidia.com:5005";
-        #     fi
-        # - if [[ ! -z $NVCR_TOKEN ]]; then
-        #     docker login -u "\$oauthtoken" -p "${NVCR_TOKEN}" "nvcr.io/nvidian";
-        #     fi
-        # # Used on gitlab.com to push to docker hub
-        # - if [[ ! -z $REGISTRY_TOKEN ]]; then
-        #     docker login -u "${REGISTRY_USER}" -p "${REGISTRY_TOKEN}" "${REGISTRY}";
-        #     fi
         pass
 
 
@@ -105,7 +87,7 @@ class ManagerDockerPush(Manager):
     DESCRIPTION = "Login and push to the docker registries"
 
     image_name = cli.SwitchAttr(
-        "--image-name", str, help="The image name to tag", default=None, mandatory=True
+        "--image-name", str, help="The image name to tag", default="", mandatory=True
     )
 
     distro = cli.SwitchAttr(
@@ -131,7 +113,7 @@ class ManagerDockerPush(Manager):
         "--tag-suffix",
         str,
         help="The suffix to append to the tag name. Example 10.1-base-centos6<suffix>",
-        default=None,
+        default="",
     )
     client = None
     repos = []
@@ -202,6 +184,7 @@ class ManagerDockerPush(Manager):
                         "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, tagged
                     )
                     if tagged:
+                        # FIXME: only push if the image has changed
                         for line in self.client.images.push(
                             new_repo, tag, stream=True, decode=True
                         ):
@@ -236,6 +219,13 @@ class ManagerGenerate(Manager):
         help="The cuda version to use. Example: '10.1'",
         default=None,
         mandatory=True,
+    )
+
+    tag_suffix = cli.SwitchAttr(
+        "--tag-suffix",
+        str,
+        help="The suffix to append to the tag name. Use for special builds. Example 10.1-base-centos6<suffix>",
+        default="",
     )
 
     def output_template(self, template_path, output_path):
@@ -276,7 +266,7 @@ class ManagerGenerate(Manager):
             ),
         )
         self.cuda = {
-            "tag_suffix": os.getenv("IMAGE_TAG_SUFFIX"),
+            "tag_suffix": self.tag_suffix,
             "repo_url": glom.glom(
                 conf,
                 glom.Path(f"{self.distro}{self.distro_version}", "cuda", "repo_url"),
