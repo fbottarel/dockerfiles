@@ -160,22 +160,60 @@ class ManagerDockerPush(Manager):
             )
             sys.exit(1)
 
+    # Check the image tag to see if it contains a suffix. This is used for special builds.
+    # A tag with a suffix looks like:
+    #
+    #  10.0-cudnn7-devel-centos6-patched
+    #  10.0-devel-centos6-patched
+    #
+    def _tag_contains_suffix(self, img):
+        fields = img.tags[0].split(":")[1].split("-")
+        is_cudnn = [s for s in fields if "cudnn" in s]
+        if (is_cudnn and len(fields) > 4) or (not is_cudnn and len(fields) > 3):
+            log.debug("tag contains suffix")
+            return True
+        elif len(fields) == 2 or f"{self.distro}{self.distro_version}" in fields[:-1]:
+            log.debug("tag does not contain suffix")
+            return False
+        elif f"{self.distro}{self.distro_version}" in fields[:-1]:
+            log.debug("tag contains suffix")
+            return True
+        log.debug("tag does not contain suffix")
+
+    def _should_push_image(self, img):
+        # Ensure the tag contains the target cuda version and distro version
+        match = all(
+            key in str(img.tags)
+            for key in [self.cuda_version, f"{self.distro}{self.distro_version}"]
+        )
+        # Override match if tag is latest and we are pushing latest
+        if self.latest and "latest" in img.tags or self.tag_suffix in img.tags:
+            log.debug("tag is latest and we are pushing latest")
+            match = True
+        # If the tag has a suffix but we are not expecting one, then fail
+        if not self.tag_suffix and self._tag_contains_suffix(img):
+            log.debug("Tag suffix detected in image tag")
+            match = False
+        # All together now
+        if (
+            not match
+            # ignore test images
+            or "-test_" in str(img.tags)
+            # a suffix is expected but the image does not contain what we expect
+            or (self.tag_suffix and self.tag_suffix not in str(img.tags))
+        ):
+            return False
+        return True
+
     def _push_images(self):
         for img in self.client.images.list(
             name=self.image_name, filters={"dangling": False}
         ):
+            log.debug("img: %s", str(img.tags))
+            if not self._should_push_image(img):
+                log.debug("Skipping")
+                continue
             log.info("Processing image: %s, id: %s", img.tags, img.short_id)
-            match = all(
-                key in str(img.tags)
-                for key in [
-                    self.cuda_version,
-                    f"{self.distro}{self.distro_version}",
-                    self.tag_suffix,
-                ]
-            )
-            if self.latest and "latest" in img.tags:
-                match = True
-            log.debug("tag: %s, match: %s", img, match)
             for repo in self.repos:
                 tag = img.tags[0].split(":")[1]
                 new_repo = "{}/{}".format(repo, img.tags[0].split(":")[0])
@@ -184,17 +222,15 @@ class ManagerDockerPush(Manager):
                         "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, False
                     )
                     log.info("Would have pushed: %s:%s", new_repo, tag)
-                else:
-                    tagged = img.tag(new_repo, tag)
-                    log.info(
-                        "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, tagged
-                    )
-                    if tagged:
-                        # FIXME: only push if the image has changed
-                        for line in self.client.images.push(
-                            new_repo, tag, stream=True, decode=True
-                        ):
-                            log.info(line)
+                    continue
+                tagged = img.tag(new_repo, tag)
+                log.info("Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, tagged)
+                if tagged:
+                    # FIXME: only push if the image has changed
+                    for line in self.client.images.push(
+                        new_repo, tag, stream=True, decode=True
+                    ):
+                        log.info(line)
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)

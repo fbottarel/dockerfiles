@@ -92,7 +92,7 @@ stages:
         --os "${OS_NAME}"
         --os-version "${OS_VERSION}"
         --cuda-version "${CUDA_VERSION}"
-        --tag-suffix "${IMAGE_TAG_SUFFIX}" ${LATEST:+"--latest"} -n
+        --tag-suffix "${IMAGE_TAG_SUFFIX}" ${LATEST:+"--push-latest"} -n
 
 #
 # FIXME: move variables to the manifest
