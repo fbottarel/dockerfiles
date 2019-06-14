@@ -4,6 +4,12 @@
 
 """Dockerfile template injector and pipeline trigger."""
 
+#
+# !! IMPORTANT !!
+#
+# Editors of this file should use https://github.com/python/black for auto formatting.
+#
+
 import re
 import os
 import pathlib
@@ -350,10 +356,22 @@ class ManagerGenerate(Manager):
 
     def generate_testscripts(self):
         for filename in pathlib.Path("test").glob("*/*.jinja"):
+            log.debug("Processing test '%s'", filename)
             # Check for distro specific tests
             if any(distro in str(filename) for distro in self.supported_distro_list()):
                 if not self.distro in str(filename):
+                    log.debug(
+                        "Skipping test '%s', distro requirement '%s' not met",
+                        filename,
+                        f"{self.distro}{self.distro_version}",
+                    )
                     continue
+            log.debug("Have special test: %s", "special" in str(filename.parents[0]))
+            skip = not self.tag_suffix or self.tag_suffix not in filename.name
+            log.debug("tag_suffix: '%s', skip match: %s", self.tag_suffix, skip)
+            if "special" in str(filename.parents[0]) and skip:
+                log.debug(f"Skipping {filename} {self.tag_suffix}")
+                continue
             self.write_test(filename, f"{self.output_path}/test")
 
     def main(self):
