@@ -2,7 +2,7 @@
 
 load helpers
 
-image="{{ cuda.os.distro }}:{{ cuda.os.version }}"
+image="${IMAGE_NAME}:10.1-devel-${OS}${IMAGE_TAG_SUFFIX}"
 envRequireCUDA="NVIDIA_REQUIRE_CUDA"
 envNVGPU="NVIDIA_VISIBLE_DEVICES"
 

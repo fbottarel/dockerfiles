@@ -17,8 +17,8 @@ function teardown() {
     FROM ${image}
     {% if cuda.os.distro == "ubuntu" -%}
     RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
-    {% elif cuda.os.distro == "centos" -%}
-    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% else -%}
+    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}{% if cuda.os.distro == "ubi" %} --disablerepo=ubi-{{ cuda.os.version }}{% endif %}
     {% endif -%}
     WORKDIR /usr/local/cuda-{{ cuda.version.major }}.{{ cuda.version.minor }}/samples/1_Utilities/deviceQuery
     RUN make
@@ -34,8 +34,8 @@ EOF
     FROM $image
     {% if cuda.os.distro == "ubuntu" -%}
     RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
-    {% elif cuda.os.distro == "centos" -%}
-    RUN yum install -y gcc-c++ make cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% else -%}
+    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}{% if cuda.os.distro == "ubi" %} --disablerepo=ubi-{{ cuda.os.version }}{% endif %}
     {% endif -%}
     WORKDIR /usr/local/cuda/samples/0_Simple/vectorAddDrv
     RUN make
@@ -51,8 +51,8 @@ EOF
     FROM $image
     {% if cuda.os.distro == "ubuntu" -%}
     RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
-    {% elif cuda.os.distro == "centos" -%}
-    RUN yum install -y gcc-c++ make cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    {% else -%}
+    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}{% if cuda.os.distro == "ubi" %} --disablerepo=ubi-{{ cuda.os.version }}{% endif %}
     {% endif -%}
     WORKDIR /usr/local/cuda/samples/0_Simple/matrixMulDrv
     RUN make

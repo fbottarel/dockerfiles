@@ -94,85 +94,108 @@ stages:
         --cuda-version "${CUDA_VERSION}"
         --tag-suffix "${IMAGE_TAG_SUFFIX}" ${LATEST:+"--push-latest"} -n
 
-#
-# FIXME: move variables to the manifest
-#
-centos6-v10.1:
+# #
+# # FIXME: move variables to the manifest
+# #
+# centos6-v10.1:
+  # <<: *cuda_base_definition
+
+# centos6-v10.1-cudnn7:
+  # <<: *cudnn_definition
+
+# centos6-v10.1-test:
+  # <<: *test_definition
+
+# centos6-v10.1-deploy:
+  # <<: *deploy_definition
+
+# centos6-v10.0:
+  # <<: *cuda_base_definition
+
+# centos6-v10.0-cudnn7:
+  # <<: *cudnn_definition
+
+# centos6-v10.0-test:
+  # <<: *test_definition
+
+# centos6-v10.0-deploy:
+  # <<: *deploy_definition
+
+# centos6-v10.1-patched-glibc:
+  # <<: *cuda_base_definition
+
+# centos6-v10.1-cudnn7-patched-glibc:
+  # <<: *cudnn_definition
+
+# centos6-v10.1-test-patched-glibc:
+  # <<: *test_definition
+
+# centos6-v10.1-deploy-patched-glibc:
+  # <<: *deploy_definition
+
+# centos6-v10.0-patched-glibc:
+  # <<: *cuda_base_definition
+
+# centos6-v10.0-cudnn7-patched-glibc:
+  # <<: *cudnn_definition
+
+# centos6-v10.0-test-patched-glibc:
+  # <<: *test_definition
+
+# centos6-v10.0-deploy-patched-glibc:
+  # <<: *deploy_definition
+
+# centos7-v10.1:
+  # variables:
+    # LATEST: "true"
+    # NO_OS_SUFFIX: "true"
+  # <<: *cuda_base_definition
+
+# centos7-v10.1-cudnn7:
+  # variables:
+    # NO_OS_SUFFIX: "true"
+  # <<: *cudnn_definition
+
+# centos7-v10.1-test:
+  # <<: *test_definition
+
+# centos7-v10.1-deploy:
+  # variables:
+    # LATEST: "true"
+  # <<: *deploy_definition
+
+# centos7-v10.0:
+  # <<: *cuda_base_definition
+
+# centos7-v10.0-cudnn7:
+  # <<: *cudnn_definition
+
+# centos7-v10.0-test:
+  # <<: *test_definition
+
+# centos7-v10.0-deploy:
+  # <<: *deploy_definition
+
+ubi7-v10.1:
   <<: *cuda_base_definition
 
-centos6-v10.1-cudnn7:
+ubi7-v10.1-cudnn7:
   <<: *cudnn_definition
 
-centos6-v10.1-test:
+ubi7-v10.1-test:
   <<: *test_definition
 
-centos6-v10.1-deploy:
+ubi7-v10.1-deploy:
   <<: *deploy_definition
 
-centos6-v10.0:
-  <<: *cuda_base_definition
+# ubi7-v10.0:
+  # <<: *cuda_base_definition
 
-centos6-v10.0-cudnn7:
-  <<: *cudnn_definition
+# ubi7-v10.0-cudnn7:
+  # <<: *cudnn_definition
 
-centos6-v10.0-test:
-  <<: *test_definition
+# ubi7-v10.0-test:
+  # <<: *test_definition
 
-centos6-v10.0-deploy:
-  <<: *deploy_definition
-
-centos6-v10.1-patched-glibc:
-  <<: *cuda_base_definition
-
-centos6-v10.1-cudnn7-patched-glibc:
-  <<: *cudnn_definition
-
-centos6-v10.1-test-patched-glibc:
-  <<: *test_definition
-
-centos6-v10.1-deploy-patched-glibc:
-  <<: *deploy_definition
-
-centos6-v10.0-patched-glibc:
-  <<: *cuda_base_definition
-
-centos6-v10.0-cudnn7-patched-glibc:
-  <<: *cudnn_definition
-
-centos6-v10.0-test-patched-glibc:
-  <<: *test_definition
-
-centos6-v10.0-deploy-patched-glibc:
-  <<: *deploy_definition
-
-centos7-v10.1:
-  variables:
-    LATEST: "true"
-    NO_OS_SUFFIX: "true"
-  <<: *cuda_base_definition
-
-centos7-v10.1-cudnn7:
-  variables:
-    NO_OS_SUFFIX: "true"
-  <<: *cudnn_definition
-
-centos7-v10.1-test:
-  <<: *test_definition
-
-centos7-v10.1-deploy:
-  variables:
-    LATEST: "true"
-  <<: *deploy_definition
-
-centos7-v10.0:
-  <<: *cuda_base_definition
-
-centos7-v10.0-cudnn7:
-  <<: *cudnn_definition
-
-centos7-v10.0-test:
-  <<: *test_definition
-
-centos7-v10.0-deploy:
-  <<: *deploy_definition
-
+# ubi7-v10.0-deploy:
+  # <<: *deploy_definition

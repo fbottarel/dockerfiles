@@ -260,9 +260,24 @@ class ManagerGenerate(Manager):
     )
 
     def output_template(self, template_path, output_path):
+        rgx = re.compile(r"^[\w]+-")
+        # If the template path contains "{distro_name}-" and it does not match the target distro, skip the template
+        if any(distro in template_path.name for distro in self.supported_distro_list()):
+            if not rgx.match(template_path.name):
+                # The template is for a specific distro and not the current target, so skip it
+                log.debug(
+                    "Skipping template '%s', distro requirement '%s' not met",
+                    template_path,
+                    self.distro,
+                )
+                return
         with open(template_path) as f:
+            log.debug("Processing template %s", template_path)
             new_output_path = pathlib.Path(output_path)
             new_filename = template_path.name[:-6]
+            if rgx.match(template_path.name):
+                new_filename = template_path.name[len(f"{self.distro}-") : -6]
+                log.debug("'%s' is renamed to '%s'", template_path.name, new_filename)
             template = Template(f.read())
             if not new_output_path.exists():
                 log.debug(f"Creating {new_output_path}")
@@ -301,6 +316,9 @@ class ManagerGenerate(Manager):
             "repo_url": glom.glom(
                 conf,
                 glom.Path(f"{self.distro}{self.distro_version}", "cuda", "repo_url"),
+            ),
+            "base_image": glom.glom(
+                conf, glom.Path(f"{self.distro}{self.distro_version}", "base_image")
             ),
             "version": {
                 "full": f"{self.cuda_version}.{build_version}",
@@ -347,14 +365,19 @@ class ManagerGenerate(Manager):
     def generate_dockerscripts(self):
         for img in ["base", "devel", "runtime"]:
             # cuda image
+            temp_path = self.parent.manifest[f"{self.distro}{self.distro_version}"][
+                "template_path"
+            ]
+            log.debug("temp_path: %s, output_path: %s", temp_path, self.output_path)
             self.output_template(
-                template_path=pathlib.Path(f"{self.distro}/{img}/Dockerfile.jinja"),
+                template_path=pathlib.Path(f"{temp_path}/{img}/Dockerfile.jinja"),
                 output_path=pathlib.Path(f"{self.output_path}/{img}"),
             )
             # copy files
-            for filename in pathlib.Path(f"{self.distro}/{img}").glob(
-                "*[!Dockerfile].*"
-            ):
+            for filename in pathlib.Path(f"{temp_path}/{img}").glob("*"):
+                if "Dockerfile" in filename.name:
+                    continue
+                log.debug("Checking %s", filename)
                 if ".jinja" in filename.name:
                     self.output_template(filename, f"{self.output_path}/{img}")
                 else:
@@ -364,18 +387,15 @@ class ManagerGenerate(Manager):
             if img in ["runtime", "devel"]:
                 self.cuda["cudnn7"]["target"] = img
                 self.output_template(
-                    template_path=pathlib.Path(
-                        f"{self.distro}/cudnn7/Dockerfile.jinja"
-                    ),
+                    template_path=pathlib.Path(f"{temp_path}/cudnn7/Dockerfile.jinja"),
                     output_path=pathlib.Path(f"{self.output_path}/{img}/cudnn7"),
                 )
 
     def supported_distro_list(self):
-        rgx = re.compile(r"[a-z]+[\d+\.]+")
+        rgx = re.compile(fr"([a-z]+)([\d+\.]+)?")
         ls = []
         for key in self.parent.manifest.keys():
-            match = rgx.match(key)
-            if match:
+            if rgx.match(key):
                 ls.append(key)
         return ls
 
@@ -383,8 +403,8 @@ class ManagerGenerate(Manager):
         for filename in pathlib.Path("test").glob("*/*.jinja"):
             log.debug("Processing test '%s'", filename)
             # Check for distro specific tests
-            if any(distro in str(filename) for distro in self.supported_distro_list()):
-                if not self.distro in str(filename):
+            if any(distro in filename.name for distro in self.supported_distro_list()):
+                if not self.distro in filename.name:
                     log.debug(
                         "Skipping test '%s', distro requirement '%s' not met",
                         filename,

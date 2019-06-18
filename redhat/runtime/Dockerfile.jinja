@@ -1,5 +1,5 @@
 ARG IMAGE_NAME
-FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-base-centos{{ cuda.os.version }}{{ cuda.tag_suffix }}
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-base-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.tag_suffix }}
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 RUN yum install -y \

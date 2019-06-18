@@ -6,6 +6,7 @@ arch:
 
 docker_repos:
   docker.io:
+    # Will only use this repo if the REGISTRY_TOKEN environment variable is set
     only_if: REGISTRY_TOKEN
     pass: REGISTRY_TOKEN
     user: REGISTRY_USER
@@ -44,8 +45,9 @@ centos6:
         version: "7.6.0.64"
         sha256sum: "e956c6f9222fcb867a10449cfc76dee5cfd7c7531021d95fe9586d7e043b57d7"
 
-centos7:
+redhat7: &redhat7_definition
   <<: *centos_cudnn7_definition
+  template_path: redhat
   cuda:
     repo_url: "http://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64"
     v10.0:
@@ -60,3 +62,11 @@ centos7:
       cudnn7:
         version: "7.6.0.64"
         sha256sum: "e956c6f9222fcb867a10449cfc76dee5cfd7c7531021d95fe9586d7e043b57d7"
+
+ubi7:
+  <<: *redhat7_definition
+  base_image: registry.access.redhat.com/ubi7/ubi:7.6-123
+
+centos7:
+  <<: *redhat7_definition
+  base_image: centos:7

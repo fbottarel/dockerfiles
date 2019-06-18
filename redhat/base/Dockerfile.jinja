@@ -50,7 +50,7 @@ RUN yum -y install /rpms/* && rm -rf /rpms && yum -y clean all && rm -rf /var/ca
 #
 # ENV SSL_CERT_FILE=/opt/_internal/certs.pem
 {% else -%}
-FROM {{ cuda.os.distro }}:{{ cuda.os.version }}
+FROM {{ cuda.base_image }}
 {% endif -%}
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
@@ -82,3 +82,9 @@ ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV NVIDIA_REQUIRE_CUDA "cuda>={{ cuda.version.major }}.{{ cuda.version.minor }} {{ cuda.requires }}"
+
+{% if cuda.os.distro == "ubi" -%}
+# UBI redhat repos contain i686 packages that cause multilib conflicts when installing cuda-samples
+RUN echo "exclude=*.i686" >> /etc/yum.conf
+COPY rhelcompute.repo /etc/yum.repos.d/rhelcompute.repo
+{% endif -%}
