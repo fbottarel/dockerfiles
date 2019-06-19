@@ -65,7 +65,9 @@ redhat7: &redhat7_definition
 
 ubi7:
   <<: *redhat7_definition
-  base_image: registry.access.redhat.com/ubi7/ubi:7.6-123
+  base_image: registry.access.redhat.com/ubi7/ubi:latest
+  exclude_repos:
+    - docker.io
 
 centos7:
   <<: *redhat7_definition

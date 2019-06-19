@@ -125,14 +125,25 @@ class ManagerDockerPush(Manager):
     repos = []
     tags = []
 
-    def _docker_login(self):
+    def docker_login(self):
         manifest = self.parent.manifest["docker_repos"]
+        repo_excludes = []
         for repo in manifest:
             if manifest[repo].get("only_if", False) and not os.getenv(
                 manifest[repo]["only_if"]
             ):
                 log.debug("repo: '%s' only_if requirement not satisfied", repo)
                 continue
+            try:
+                repo_excludes = glom.glom(
+                    self.parent.manifest,
+                    glom.Path(f"{self.distro}{self.distro_version}", "exclude_repos"),
+                )
+                if repo in repo_excludes:
+                    log.debug("Repo %s has been excluded in the manifest!", repo)
+                    continue
+            except glom.PathAccessError:
+                pass
             user = os.getenv(manifest[repo]["user"])
             passwd = os.getenv(manifest[repo]["pass"])
             if not user:
@@ -194,7 +205,7 @@ class ManagerDockerPush(Manager):
             return False
         return True
 
-    def _push_images(self):
+    def push_images(self):
         for img in self.client.images.list(
             name=self.image_name, filters={"dangling": False}
         ):
@@ -224,8 +235,8 @@ class ManagerDockerPush(Manager):
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
         self.client = docker.DockerClient(base_url="unix://var/run/docker.sock")
-        self._docker_login()
-        self._push_images()
+        self.docker_login()
+        self.push_images()
         log.info("Done")
 
 
