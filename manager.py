@@ -324,6 +324,8 @@ class ManagerGenerate(Manager):
         )
         self.cuda = {
             "tag_suffix": self.tag_suffix,
+            # FIXME: arbitrary keys in the manifest should be pulled into the template fill object automatically
+            # This will fail if repo_url does not exist and it is currently only used in redhat based images
             "repo_url": glom.glom(
                 conf,
                 glom.Path(f"{self.distro}{self.distro_version}", "cuda", "repo_url"),
