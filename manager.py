@@ -19,6 +19,7 @@ import shutil
 import glob
 import sys
 import io
+from pprint import pformat
 
 import jinja2
 from jinja2 import Template
@@ -29,6 +30,7 @@ import glom
 import docker
 import git
 import deepdiff
+import requests
 
 
 log = logging.getLogger()
@@ -87,13 +89,18 @@ class ManagerTrigger(Manager):
 
     def load_last_manifest(self):
         self.repo = git.Repo(pathlib.Path("."))
+        # XXX: HEAD~1 would not work for merges...
         commit = self.repo.commit("HEAD~1")
+        log.debug("getting previous manifest from git commit %s", commit.hexsha)
         blob = commit.tree / "manifest.yaml"
         with io.BytesIO(blob.data_stream.read()) as f:
             tf = f.read().decode("utf-8")
         self.manifest_previous = yaml.load(tf, yaml.Loader)
 
     def load_current_manifest(self):
+        log.debug(
+            "current manifest from git commit %s", self.repo.commit("HEAD").hexsha
+        )
         with open("manifest.yaml", "r") as f:
             self.manifest_current = yaml.load(f, yaml.Loader)
 
@@ -105,7 +112,7 @@ class ManagerTrigger(Manager):
             manifest.pop("docker_repos")
 
     def deep_compare(self):
-        rgx = re.compile(r"root\['([\w]+)'\]")
+        rgx = re.compile(r"root\['(\w*).*\['v(\d+\.\d+)")
 
         ddiff = deepdiff.DeepDiff(
             self.manifest_previous,
@@ -118,22 +125,64 @@ class ManagerTrigger(Manager):
             ],
         ).to_dict()
 
-        # parse added or removed items
-        for obj in ddiff["dictionary_item_added"].union(
-            ddiff["dictionary_item_removed"]
-        ):
-            match = rgx.match(obj)
-            self.changed.add(match.group(1))
+        if not ddiff:
+            log.info("No changes detected! 🍺")
+            return
 
-        # parse self.changed items
-        for k, _ in ddiff["values_changed"].items():
-            match = rgx.match(k)
-            self.changed.add(match.group(1))
+        #  from pprint import pprint
+
+        #  pprint(self.manifest_previous)
+        #  pprint(self.manifest_current)
+        log.debug("Have ddif: %s", ddiff)
+
+        items_added = ddiff.get("dictionary_item_added", None)
+        items_removed = ddiff.get("dictionary_item_removed", None)
+        items_changed = ddiff.get("values_changed", None)
+
+        # FIXME: not DRY
+        if items_added and items_removed:
+            # parse added or removed items
+            for obj in ddiff["dictionary_item_added"].union(
+                ddiff["dictionary_item_removed"]
+            ):
+                match = rgx.match(obj)
+                self.changed.add(
+                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
+                )
+        elif items_added:
+            for obj in items_added:
+                match = rgx.match(obj)
+                self.changed.add(
+                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
+                )
+        elif items_removed:
+            for obj in items_removed:
+                match = rgx.match(obj)
+                self.changed.add(
+                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
+                )
+
+        if items_changed:
+            for obj in items_changed:
+                match = rgx.match(obj)
+                self.changed.add(
+                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
+                )
 
         log.debug("manifest root changes: %s", self.changed)
 
     def kickoff(self):
-        pass
+        url = os.getenv("CI_API_V4_URL")
+        project_id = os.getenv("CI_PROJECT_ID")
+        token = os.getenv("CI_JOB_TOKEN")
+        ref = os.getenv("CI_COMMIT_REF_NAME")
+        payload = {"token": token, "ref": ref, "variables[TRIGGER]": "true"}
+        for job in self.changed:
+            payload[f"variables[{job}]"] = "true"
+        log.debug("payload %s", payload)
+        r = requests.post(f"{url}/projects/{project_id}/trigger/pipeline", data=payload)
+        log.debug("response status code %s", r.status_code)
+        log.debug("response body %s", r.json())
 
     def main(self):
         self.load_last_manifest()
@@ -326,7 +375,11 @@ class ManagerGenerate(Manager):
 
     # extracts arbitrary keys and inserts them into the templating context
     def extract_keys(self, val):
+        rgx = re.compile(r"^v\d+\.\d")
         for k, v in val.items():
+            if rgx.match(k):
+                # Do not copy cuda version keys
+                continue
             # These top level keys should be ignored since they are processed elsewhere
             if k in ["cuda", "exclude_repos", "build_version"]:
                 continue
@@ -406,14 +459,19 @@ class ManagerGenerate(Manager):
         }
 
         # Users of manifest.yaml are allowed to set arbitrary keys for inclusion in the templates
-        # Here the keys are injected into the template context
+        # and the discovered keys are injected into the template context.
+        # We only checks at three levels in the manifest
         self.extract_keys(self.get_data(conf, f"{self.distro}{self.distro_version}"))
+        self.extract_keys(
+            self.get_data(conf, f"{self.distro}{self.distro_version}", "cuda")
+        )
         self.extract_keys(
             self.get_data(
                 conf, f"{self.distro}{self.distro_version}", "cuda", f"v{major}.{minor}"
             )
         )
-        log.debug("cuda version %s", glom.glom(self.cuda, glom.Path("version")))
+        log.info("cuda version %s", glom.glom(self.cuda, glom.Path("version")))
+        log.debug("template context %s", pformat(self.cuda))
 
     def generate_dockerscripts(self):
         for img in ["base", "devel", "runtime"]:

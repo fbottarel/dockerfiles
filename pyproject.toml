@@ -15,6 +15,7 @@ docker = "*"
 gitpython = "^2.1"
 deepdiff = "^4.0"
 mmh3 = "^2.5"
+requests = "^2.22"
 
 [tool.poetry.dev-dependencies]
 pytest = ">3.6"

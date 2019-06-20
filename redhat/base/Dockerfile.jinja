@@ -85,6 +85,6 @@ ENV NVIDIA_REQUIRE_CUDA "cuda>={{ cuda.version.major }}.{{ cuda.version.minor }}
 
 {% if cuda.os.distro == "ubi" -%}
 # UBI redhat repos contain i686 packages that cause multilib conflicts when installing cuda-samples
-# RUN echo "exclude=*.i686" >> /etc/yum.conf
-# COPY rhelcompute.repo /etc/yum.repos.d/rhelcompute.repo
+RUN echo "exclude=*.i686" >> /etc/yum.conf
+COPY rhelcompute.repo /etc/yum.repos.d/rhelcompute.repo
 {% endif -%}

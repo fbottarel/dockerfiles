@@ -4,11 +4,12 @@ image: docker:stable
 #       runtime to perform tests
 
 variables:
-  GIT_DEPTH: "1"
+  # Need a value of two here for checking the manifest in the last commit
+  GIT_DEPTH: "2"
   IMAGE_NAME: "${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
 
 before_script:
-  - apk add --no-cache git bash findutils python3 curl
+  - apk add --no-cache git bash findutils python3 python3-dev curl g++
   - python3 -m ensurepip && \
   - rm -r /usr/lib/python*/ensurepip && \
   - pip3 install --upgrade pip setuptools && \
@@ -29,11 +30,13 @@ before_script:
   - 'echo "CUDA_VERSION: $CUDA_VERSION"'
   - 'echo "CUDNN_VERSION: $CUDNN_VERSION"'
   - 'echo "IMAGE_TAG_SUFFIX: $IMAGE_TAG_SUFFIX"'
-  - python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}" ${IMAGE_TAG_SUFFIX:+--tag-suffix $IMAGE_TAG_SUFFIX}
+  - if [[ ! -z "${TRIGGER}" ]]; then
+        python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}" ${IMAGE_TAG_SUFFIX:+--tag-suffix $IMAGE_TAG_SUFFIX};
+    fi
 
 stages:
   # trigger stage is a workaround until https://gitlab.com/gitlab-org/gitlab-ce/issues/22972 is implemented
-  # - trigger
+  - trigger
   - cuda
   - cudnn
   - test
@@ -94,9 +97,14 @@ stages:
         --cuda-version "${CUDA_VERSION}"
         --tag-suffix "${IMAGE_TAG_SUFFIX}" ${LATEST:+"--push-latest"} -n
 
-# #
-# # FIXME: move variables to the manifest
-# #
+trigger:
+  script:
+    - echo CI_COMMIT_MESSAGE:$CI_COMMIT_MESSAGE
+    - python manager.py trigger
+  only:
+    variables:
+      - $TRIGGER == null
+
 # centos6-v10.1:
   # <<: *cuda_base_definition
 
@@ -176,6 +184,27 @@ stages:
 # centos7-v10.0-deploy:
   # <<: *deploy_definition
 
+.centos7_cuda9_2_only: &centos7_cuda9_2_only
+  only:
+    variables:
+      - $centos7_cuda9_2 == "true"
+
+centos7-v9.2:
+  <<: *cuda_base_definition
+  <<: *centos7_cuda9_2_only
+
+centos7-v9.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_cuda9_2_only
+
+centos7-v9.2-test:
+  <<: *test_definition
+  <<: *centos7_cuda9_2_only
+
+centos7-v9.2-deploy:
+  <<: *deploy_definition
+  <<: *centos7_cuda9_2_only
+
 # ubi7-v10.1:
   # <<: *cuda_base_definition
 
@@ -188,26 +217,35 @@ stages:
 # ubi7-v10.1-deploy:
   # <<: *deploy_definition
 
-ubi7-v10.0:
-  <<: *cuda_base_definition
-
-ubi7-v10.0-cudnn7:
-  <<: *cudnn_definition
-
-ubi7-v10.0-test:
-  <<: *test_definition
-
-ubi7-v10.0-deploy:
-  <<: *deploy_definition
-
-# ubi7-v9.2:
+# ubi7-v10.0:
   # <<: *cuda_base_definition
 
-# ubi7-v9.2-cudnn7:
+# ubi7-v10.0-cudnn7:
   # <<: *cudnn_definition
 
-# ubi7-v9.2-test:
+# ubi7-v10.0-test:
   # <<: *test_definition
 
-# ubi7-v9.2-deploy:
+# ubi7-v10.0-deploy:
   # <<: *deploy_definition
+
+.ubi7_cuda9_2_only: &ubi7_cuda9_2_only
+  only:
+    variables:
+      - $ubi7_cuda9_2 == "true"
+
+ubi7-v9.2:
+  <<: *cuda_base_definition
+  <<: *ubi7_cuda9_2_only
+
+ubi7-v9.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_cuda9_2_only
+
+ubi7-v9.2-test:
+  <<: *test_definition
+  <<: *ubi7_cuda9_2_only
+
+ubi7-v9.2-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_cuda9_2_only
