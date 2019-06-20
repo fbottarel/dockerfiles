@@ -61,6 +61,18 @@ humanfriendly = ">=4.7"
 
 [[package]]
 category = "main"
+description = "Deep Difference and Search of any Python object/data."
+name = "deepdiff"
+optional = false
+python-versions = ">=3.4"
+version = "4.0.6"
+
+[package.dependencies]
+jsonpickle = ">=1.0"
+ordered-set = ">=3.1"
+
+[[package]]
+category = "main"
 description = "A Python library for the Docker Engine API."
 name = "docker"
 optional = false
@@ -86,6 +98,28 @@ version = "19.1.1"
 
 [package.dependencies]
 boltons = "*"
+
+[[package]]
+category = "main"
+description = "Git Object Database"
+name = "gitdb2"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.0.5"
+
+[package.dependencies]
+smmap2 = ">=2.0.0"
+
+[[package]]
+category = "main"
+description = "Python Git Library"
+name = "gitpython"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.1.11"
+
+[package.dependencies]
+gitdb2 = ">=2.0.0"
 
 [[package]]
 category = "main"
@@ -143,11 +177,27 @@ MarkupSafe = ">=0.23"
 
 [[package]]
 category = "main"
+description = "Python library for serializing any arbitrary object graph into JSON"
+name = "jsonpickle"
+optional = false
+python-versions = "*"
+version = "1.2"
+
+[[package]]
+category = "main"
 description = "Safely add untrusted strings to HTML/XML markup."
 name = "markupsafe"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 version = "1.1.1"
+
+[[package]]
+category = "main"
+description = "Python wrapper for MurmurHash (MurmurHash3), a set of fast and robust hash functions."
+name = "mmh3"
+optional = false
+python-versions = "*"
+version = "2.5.1"
 
 [[package]]
 category = "dev"
@@ -156,6 +206,14 @@ name = "more-itertools"
 optional = false
 python-versions = ">=3.4"
 version = "7.0.0"
+
+[[package]]
+category = "main"
+description = "A MutableSet that remembers its order, so that every entry has an index."
+name = "ordered-set"
+optional = false
+python-versions = ">=2.7"
+version = "3.1.1"
 
 [[package]]
 category = "dev"
@@ -264,11 +322,19 @@ version = "1.12.0"
 
 [[package]]
 category = "main"
+description = "A pure Python implementation of a sliding window memory map manager"
+name = "smmap2"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.0.5"
+
+[[package]]
+category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
-version = "1.25.3"
+python-versions = "*"
+version = "1.22"
 
 [[package]]
 category = "main"
@@ -290,8 +356,8 @@ python-versions = ">=2.7"
 version = "0.5.1"
 
 [metadata]
-content-hash = "9ba019058ebcfa4397f8ebd510aa7046a5218b7865e0c90e6418f70e6f8fb610"
-python-versions = "^3.7"
+content-hash = "05ceec82dc1feac14dceb7772d2334065131e08333e676b13070602f63db9c92"
+python-versions = ">3.6"
 
 [metadata.hashes]
 atomicwrites = ["03472c30eb2c5d1ba9227e4c2ca66ab8287fbfbbda3888aa93dc2e28fc6811b4", "75a9445bac02d8d058d5e1fe689654ba5a6556a1dfd8ce6ec55a0ed79866cfa6"]
@@ -301,15 +367,21 @@ certifi = ["59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5", "
 chardet = ["84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae", "fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"]
 colorama = ["05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d", "f8ac84de7840f5b9c4e3347b3c1eaa50f7e49c2b07596221daec5edaabbd7c48"]
 coloredlogs = ["34fad2e342d5a559c31b6c889e8d14f97cb62c47d9a2ae7b5ed14ea10a79eff8", "b869a2dda3fa88154b9dd850e27828d8755bfab5a838a1c97fbc850c6e377c36"]
+deepdiff = ["55e461f56dcae3dc540746b84434562fb7201e5c27ecf28800e4cfdd17f61e56", "856966b80109df002a1ee406ba21cd66e64746167b2ea8f5353d692762326ac9"]
 docker = ["3db499d4d25847fed86acf8e100c989f7bc0f75a6fff6c52855726ada1d124f6", "f61c37d721b489b7d55ef631b241be2d6a5884c3ffe63dc8f7dd9a3c3cd60489"]
 face = ["40c8228ad410e263e6509264fa0cef642f7aeeba30c2d575f872ec118047e63b", "cb41c8cc6f0c5ac4141499a5dbb09312156e0b7e535ee1d306d0c34905a6fb23"]
+gitdb2 = ["83361131a1836661a155172932a13c08bda2db3674e4caa32368aa6eb02f38c2", "e3a0141c5f2a3f635c7209d56c496ebe1ad35da82fe4d3ec4aaa36278d70648a"]
+gitpython = ["563221e5a44369c6b79172f455584c9ebbb122a13368cc82cb4b5addff788f82", "8237dc5bfd6f1366abeee5624111b9d6879393d84745a507de0fda86043b65a8"]
 glom = ["0586e9c7011bb30068fd47b4021e40fab5a29c674801c89c3937f5bc4d44791c", "c277f34e5e498834a63c2114a25a6c67b5cf0b92f96bb65cba063d861c3d1da6"]
 humanfriendly = ["23057b10ad6f782e7bc3a20e3cb6768ab919f619bbdc0dd75691121bbde5591d", "33ee8ceb63f1db61cce8b5c800c531e1a61023ac5488ccde2ba574a85be00a85"]
 idna = ["c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407", "ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"]
 importlib-metadata = ["6dfd58dfe281e8d240937776065dd3624ad5469c835248219bd16cf2e12dbeb7", "cb6ee23b46173539939964df59d3d72c3e0c1b5d54b84f1d8a7e912fe43612db"]
 jinja2 = ["065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013", "14dd6caf1527abb21f08f86c784eac40853ba93edb79552aa1e4b8aef1b61c7b"]
+jsonpickle = ["d0c5a4e6cb4e58f6d5406bdded44365c2bcf9c836c4f52910cc9ba7245a59dc2", "d3e922d781b1d0096df2dad89a2e1f47177d7969b596aea806a9d91b4626b29b"]
 markupsafe = ["00bc623926325b26bb9605ae9eae8a215691f33cae5df11ca5424f06f2d1f473", "09027a7803a62ca78792ad89403b1b7a73a01c8cb65909cd876f7fcebd79b161", "09c4b7f37d6c648cb13f9230d847adf22f8171b1ccc4d5682398e77f40309235", "1027c282dad077d0bae18be6794e6b6b8c91d58ed8a8d89a89d59693b9131db5", "24982cc2533820871eba85ba648cd53d8623687ff11cbb805be4ff7b4c971aff", "29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b", "43a55c2930bbc139570ac2452adf3d70cdbb3cfe5912c71cdce1c2c6bbd9c5d1", "46c99d2de99945ec5cb54f23c8cd5689f6d7177305ebff350a58ce5f8de1669e", "500d4957e52ddc3351cabf489e79c91c17f6e0899158447047588650b5e69183", "535f6fc4d397c1563d08b88e485c3496cf5784e927af890fb3c3aac7f933ec66", "62fe6c95e3ec8a7fad637b7f3d372c15ec1caa01ab47926cfdf7a75b40e0eac1", "6dd73240d2af64df90aa7c4e7481e23825ea70af4b4922f8ede5b9e35f78a3b1", "717ba8fe3ae9cc0006d7c451f0bb265ee07739daf76355d06366154ee68d221e", "79855e1c5b8da654cf486b830bd42c06e8780cea587384cf6545b7d9ac013a0b", "7c1699dfe0cf8ff607dbdcc1e9b9af1755371f92a68f706051cc8c37d447c905", "88e5fcfb52ee7b911e8bb6d6aa2fd21fbecc674eadd44118a9cc3863f938e735", "8defac2f2ccd6805ebf65f5eeb132adcf2ab57aa11fdf4c0dd5169a004710e7d", "98c7086708b163d425c67c7a91bad6e466bb99d797aa64f965e9d25c12111a5e", "9add70b36c5666a2ed02b43b335fe19002ee5235efd4b8a89bfcf9005bebac0d", "9bf40443012702a1d2070043cb6291650a0841ece432556f784f004937f0f32c", "ade5e387d2ad0d7ebf59146cc00c8044acbd863725f887353a10df825fc8ae21", "b00c1de48212e4cc9603895652c5c410df699856a2853135b3967591e4beebc2", "b1282f8c00509d99fef04d8ba936b156d419be841854fe901d8ae224c59f0be5", "b2051432115498d3562c084a49bba65d97cf251f5a331c64a12ee7e04dacc51b", "ba59edeaa2fc6114428f1637ffff42da1e311e29382d81b339c1817d37ec93c6", "c8716a48d94b06bb3b2524c2b77e055fb313aeb4ea620c8dd03a105574ba704f", "cd5df75523866410809ca100dc9681e301e3c27567cf498077e8551b6d20e42f", "e249096428b3ae81b08327a63a485ad0878de3fb939049038579ac0ef61e17e7"]
+mmh3 = ["185209a217c52afe43e079e5b232d0ef0f3a262601eaaf4371326ab6dcbec508"]
 more-itertools = ["2112d2ca570bb7c3e53ea1a35cd5df42bb0fd10c45f0fb97178679c3c03d64c7", "c3e4748ba1aad8dba30a4886b0b1a2004f9a863837b8654e7059eebf727afa5a"]
+ordered-set = ["a7bfa858748c73b096e43db14eb23e2bc714a503f990c89fac8fab9b0ee79724"]
 pluggy = ["0825a152ac059776623854c1543d65a4ad408eb3d33ee114dff91e57ec6ae6fc", "b9817417e95936bf75d85d3f8767f7df6cdde751fc40aed3bb3074cbcb77757c"]
 plumbum = ["d143f079bfb60b11e9bec09a49695ce2e55ce5ca0246877bdb0818ab7c7fc312", "df96a5facf621db4a6d682bdc93afa5ed6b107a8667c73c3f0a0f0fab4217c81"]
 py = ["64f65755aee5b381cea27766a3a147c3f15b9b6b9ac88676de66ba2ae36793fa", "dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53"]
@@ -320,6 +392,7 @@ pywin32 = ["22e218832a54ed206452c8f3ca9eff07ef327f8e597569a4c2828be5eaa09a77", "
 pyyaml = ["57acc1d8533cbe51f6662a55434f0dbecfa2b9eaf115bede8f6fd00115a0c0d3", "588c94b3d16b76cfed8e0be54932e5729cc185caffaa5a451e7ad2f7ed8b4043", "68c8dd247f29f9a0d09375c9c6b8fdc64b60810ebf07ba4cdd64ceee3a58c7b7", "70d9818f1c9cd5c48bb87804f2efc8692f1023dac7f1a1a5c61d454043c1d265", "86a93cccd50f8c125286e637328ff4eef108400dd7089b46a7be3445eecfa391", "a0f329125a926876f647c9fa0ef32801587a12328b4a3c741270464e3e4fa778", "a3c252ab0fa1bb0d5a3f6449a4826732f3eb6c0270925548cac342bc9b22c225", "b4bb4d3f5e232425e25dda21c070ce05168a786ac9eda43768ab7f3ac2770955", "cd0618c5ba5bda5f4039b9398bb7fb6a317bb8298218c3de25c47c4740e4b95e", "ceacb9e5f8474dcf45b940578591c7f3d960e82f926c707788a570b51ba59190", "fe6a88094b64132c4bb3b631412e90032e8cfe9745a58370462240b8cb7553cd"]
 requests = ["11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4", "9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
-urllib3 = ["b246607a25ac80bedac05c6f282e3cdaf3afb65420fd024ac94435cabe6e18d1", "dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232"]
+smmap2 = ["0555a7bf4df71d1ef4218e4807bbf9b201f910174e6e08af2e138d4e517b4dde", "29a9ffa0497e7f2be94ca0ed1ca1aa3cd4cf25a1f6b4f5f87f74b46ed91d609a"]
+urllib3 = ["06330f386d6e4b195fbfc736b297f58c5a892e4440e54d294d7004e3a9bbea1b", "cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f"]
 websocket-client = ["1151d5fb3a62dc129164292e1227655e4bbc5dd5340a5165dfae61128ec50aa9", "1fd5520878b68b84b5748bb30e592b10d0a91529d5383f74f4964e72b297fd3a"]
 zipp = ["8c1019c6aad13642199fbe458275ad6a84907634cc9f0989877ccc4a2840139d", "ca943a7e809cc12257001ccfb99e3563da9af99d52f261725e96dfe0f9275bc3"]

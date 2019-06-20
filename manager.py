@@ -18,17 +18,17 @@ import logging.config
 import shutil
 import glob
 import sys
+import io
 
 import jinja2
 from jinja2 import Template
-
 from plumbum import cli
 from plumbum.cmd import rm
 import yaml
-
 import glom
-
 import docker
+import git
+import deepdiff
 
 
 log = logging.getLogger()
@@ -56,10 +56,6 @@ class Manager(cli.Application):
         with open("manager-config.yaml", "r") as f:
             logging.config.dictConfig(yaml.safe_load(f.read())["logging"])
 
-    def _config_check(self):
-        """Check if the config has changed in the latest git commit"""
-        pass
-
     def _load_yaml(self):
         """Load the manifest and gitlab ci yaml files"""
         self._load_manifest_yaml()
@@ -80,12 +76,70 @@ class Manager(cli.Application):
         self._load_yaml()
 
 
-@Manager.subcommand("check")
-class ManagerCheck(Manager):
-    DESCRIPTION = "Check for changes."
+@Manager.subcommand("trigger")
+class ManagerTrigger(Manager):
+    DESCRIPTION = "Trigger for changes."
+
+    repo = None
+    manifest_current = None
+    manifest_previous = None
+    changed = set()
+
+    def load_last_manifest(self):
+        self.repo = git.Repo(pathlib.Path("."))
+        commit = self.repo.commit("HEAD~1")
+        blob = commit.tree / "manifest.yaml"
+        with io.BytesIO(blob.data_stream.read()) as f:
+            tf = f.read().decode("utf-8")
+        self.manifest_previous = yaml.load(tf, yaml.Loader)
+
+    def load_current_manifest(self):
+        with open("manifest.yaml", "r") as f:
+            self.manifest_current = yaml.load(f, yaml.Loader)
+
+    # Remove stuff we don't care about before compare. Typically yaml placeholders.
+    def prune_objects(self):
+        for manifest in [self.manifest_current, self.manifest_previous]:
+            manifest.pop("redhat7")
+            manifest.pop("redhat6")
+            manifest.pop("docker_repos")
+
+    def deep_compare(self):
+        rgx = re.compile(r"root\['([\w]+)'\]")
+
+        ddiff = deepdiff.DeepDiff(
+            self.manifest_previous,
+            self.manifest_current,
+            verbose_level=0,
+            exclude_paths=[
+                "root['redhat6']",
+                "root['redhat7']",
+                "root['docker_repos']",
+            ],
+        ).to_dict()
+
+        # parse added or removed items
+        for obj in ddiff["dictionary_item_added"].union(
+            ddiff["dictionary_item_removed"]
+        ):
+            match = rgx.match(obj)
+            self.changed.add(match.group(1))
+
+        # parse self.changed items
+        for k, _ in ddiff["values_changed"].items():
+            match = rgx.match(k)
+            self.changed.add(match.group(1))
+
+        log.debug("manifest root changes: %s", self.changed)
+
+    def kickoff(self):
+        pass
 
     def main(self):
-        pass
+        self.load_last_manifest()
+        self.load_current_manifest()
+        self.deep_compare()
+        self.kickoff()
 
 
 @Manager.subcommand("docker-push")
