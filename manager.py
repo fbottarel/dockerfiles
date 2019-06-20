@@ -270,6 +270,14 @@ class ManagerGenerate(Manager):
         default="",
     )
 
+    # extracts arbitrary keys and inserts them into the templating context
+    def extract_keys(self, val):
+        for k, v in val.items():
+            # These top level keys should be ignored since they are processed elsewhere
+            if k in ["cuda", "exclude_repos", "build_version"]:
+                continue
+            self.cuda[k] = v
+
     def output_template(self, template_path, output_path):
         rgx = re.compile(r"^[\w]+-")
         # If the template path contains "{distro_name}-" and it does not match the target distro, skip the template
@@ -309,70 +317,48 @@ class ManagerGenerate(Manager):
             with open(f"{test_output_path}/{basename[:-6]}", "w") as f2:
                 f2.write(template.render(cuda=self.cuda))
 
-    def build_cuda_dict(self):
+    # Get data from a object by dotted path. Example "cuda."v10.0".cuda_requires"
+    def get_data(self, obj, *path, can_skip=False):
+        try:
+            data = glom.glom(obj, glom.Path(*path))
+        except glom.PathAccessError:
+            if can_skip:
+                return
+            raise glom.PathAccessError
+        return data
+
+    def prepare_context(self):
         conf = self.parent.manifest
-        major = self.cuda_version[:2]
-        minor = self.cuda_version[3]
-        build_version = glom.glom(
+        major = self.cuda_version.split(".")[0]
+        minor = self.cuda_version.split(".")[1]
+
+        build_version = self.get_data(
             conf,
-            glom.Path(
-                f"{self.distro}{self.distro_version}",
-                "cuda",
-                f"v{self.cuda_version}",
-                "build_version",
-            ),
+            f"{self.distro}{self.distro_version}",
+            "cuda",
+            f"v{self.cuda_version}",
+            "build_version",
         )
+
+        # The templating context. This data structure is used to fill the templates.
         self.cuda = {
-            "tag_suffix": self.tag_suffix,
-            # FIXME: arbitrary keys in the manifest should be pulled into the template fill object automatically
-            # This will fail if repo_url does not exist and it is currently only used in redhat based images
-            "repo_url": glom.glom(
-                conf,
-                glom.Path(f"{self.distro}{self.distro_version}", "cuda", "repo_url"),
-            ),
-            "base_image": glom.glom(
-                conf, glom.Path(f"{self.distro}{self.distro_version}", "base_image")
-            ),
             "version": {
                 "full": f"{self.cuda_version}.{build_version}",
                 "major": major,
                 "minor": minor,
             },
-            "requires": glom.glom(
-                conf,
-                glom.Path(
-                    f"{self.distro}{self.distro_version}",
-                    "cuda",
-                    f"v{major}.{minor}",
-                    "cuda_requires",
-                ),
-            ),
             "os": {"distro": self.distro, "version": self.distro_version},
-            "arch": "x86_64",
-            "cudnn7": {
-                "version": glom.glom(
-                    conf,
-                    glom.Path(
-                        f"{self.distro}{self.distro_version}",
-                        "cuda",
-                        f"v{major}.{minor}",
-                        "cudnn7",
-                        "version",
-                    ),
-                ),
-                "sha256sum": glom.glom(
-                    conf,
-                    glom.Path(
-                        f"{self.distro}{self.distro_version}",
-                        "cuda",
-                        f"v{major}.{minor}",
-                        "cudnn7",
-                        "sha256sum",
-                    ),
-                ),
-                "target": "",
-            },
+            "tag_suffix": self.tag_suffix,
         }
+
+        # Users of manifest.yaml are allowed to set arbitrary keys for inclusion in the templates
+        # Here the keys are injected into the template context
+        self.extract_keys(self.get_data(conf, f"{self.distro}{self.distro_version}"))
+        self.extract_keys(
+            self.get_data(
+                conf, f"{self.distro}{self.distro_version}", "cuda", f"v{major}.{minor}"
+            )
+        )
         log.debug("cuda version %s", glom.glom(self.cuda, glom.Path("version")))
 
     def generate_dockerscripts(self):
@@ -441,7 +427,7 @@ class ManagerGenerate(Manager):
             rm["-rf", self.output_path]()
         log.debug(f"Creating {self.output_path}")
         self.output_path.mkdir(parents=True, exist_ok=False)
-        self.build_cuda_dict()
+        self.prepare_context()
         self.generate_dockerscripts()
         self.generate_testscripts()
         log.info("Done")
