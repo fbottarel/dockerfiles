@@ -5,11 +5,17 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 ENV CUDNN_VERSION {{ cuda.cudnn7.version }}
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
+{% if cuda.version.major == "9" and cuda.version.minor == "1" -%}
+  {% set cudnn7_version = cuda.cudnn7.version[:3] -%}
+{% else -%}
+  {% set cudnn7_version = cuda.cudnn7.version -%}
+{% endif -%}
+
 # cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
 RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn7.sha256sum }} && \
-    curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cuda.cudnn7.version[:cuda.cudnn7.version.rfind(".")] }}/cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cuda.cudnn7.version }}.tgz -O && \
-    echo "$CUDNN_DOWNLOAD_SUM  cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cuda.cudnn7.version }}.tgz" | sha256sum -c - && \
-    tar --no-same-owner -xzf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cuda.cudnn7.version }}.tgz -C /usr/local {% if cuda.cudnn7.target == "runtime" -%}--wildcards 'cuda/lib64/libcudnn.so.*' {% endif -%} && \
-    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cuda.cudnn7.version }}.tgz && \
+    curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cuda.cudnn7.version[:cuda.cudnn7.version.rfind(".")] }}/cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cudnn7_version }}.tgz -O && \
+    echo "$CUDNN_DOWNLOAD_SUM  cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cudnn7_version}}.tgz" | sha256sum -c - && \
+    tar --no-same-owner -xzf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cudnn7_version }}.tgz -C /usr/local {% if cuda.cudnn7.target == "runtime" -%}--wildcards 'cuda/lib64/libcudnn.so.*' {% endif -%} && \
+    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cudnn7_version }}.tgz && \
     ldconfig
 

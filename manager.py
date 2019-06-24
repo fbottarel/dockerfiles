@@ -87,6 +87,10 @@ class ManagerTrigger(Manager):
     manifest_previous = None
     changed = set()
 
+    dry_run = cli.Flag(
+        ["-n", "--dry-run"], help="Show output but don't make any changes."
+    )
+
     def load_last_manifest(self):
         self.repo = git.Repo(pathlib.Path("."))
         # XXX: HEAD~1 would not work for merges...
@@ -111,8 +115,13 @@ class ManagerTrigger(Manager):
             manifest.pop("redhat6")
             manifest.pop("docker_repos")
 
+    # returns true if changes have been detected
     def deep_compare(self):
         rgx = re.compile(r"root\['(\w*).*\['v(\d+\.\d+)")
+
+        # Uncomment this to see the files being compared in the logs
+        #  log.debug("manifest previous: %s", pformat(self.manifest_previous))
+        #  log.debug("manifest current: %s", pformat(self.manifest_current))
 
         ddiff = deepdiff.DeepDiff(
             self.manifest_previous,
@@ -127,7 +136,7 @@ class ManagerTrigger(Manager):
 
         if not ddiff:
             log.info("No changes detected! 🍺")
-            return
+            return False
 
         #  from pprint import pprint
 
@@ -170,6 +179,7 @@ class ManagerTrigger(Manager):
                 )
 
         log.debug("manifest root changes: %s", self.changed)
+        return True
 
     def kickoff(self):
         url = os.getenv("CI_API_V4_URL")
@@ -180,15 +190,20 @@ class ManagerTrigger(Manager):
         for job in self.changed:
             payload[f"variables[{job}]"] = "true"
         log.debug("payload %s", payload)
-        r = requests.post(f"{url}/projects/{project_id}/trigger/pipeline", data=payload)
-        log.debug("response status code %s", r.status_code)
-        log.debug("response body %s", r.json())
+        if not self.dry_run:
+            r = requests.post(
+                f"{url}/projects/{project_id}/trigger/pipeline", data=payload
+            )
+            log.debug("response status code %s", r.status_code)
+            log.debug("response body %s", r.json())
+        else:
+            log.info("In dry-run mode so not making gitlab trigger POST")
 
     def main(self):
         self.load_last_manifest()
         self.load_current_manifest()
-        self.deep_compare()
-        self.kickoff()
+        if self.deep_compare():
+            self.kickoff()
 
 
 @Manager.subcommand("docker-push")

@@ -58,10 +58,14 @@ redhat7: &redhat7_definition
         sha256sum: "e956c6f9222fcb867a10449cfc76dee5cfd7c7531021d95fe9586d7e043b57d7"
     v9.2:
       build_version: 148
-      test: true
       cudnn7:
         version: "7.6.0.64"
         sha256sum: "ff028e6f07349445c16fef704a90bccb0992c3e012bba66ab1da352bad55b304"
+    v9.1:
+      build_version: 85
+      cudnn7:
+        version: "7.1.2.21"
+        sha256sum: "c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec"
 
 centos6:
   base_image: centos:6

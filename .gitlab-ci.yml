@@ -205,6 +205,27 @@ centos7-v9.2-deploy:
   <<: *deploy_definition
   <<: *centos7_cuda9_2_only
 
+.centos7_cuda9_1_only: &centos7_cuda9_1_only
+  only:
+    variables:
+      - $centos7_cuda9_1 == "true"
+
+centos7-v9.1:
+  <<: *cuda_base_definition
+  <<: *centos7_cuda9_1_only
+
+centos7-v9.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_cuda9_1_only
+
+centos7-v9.1-test:
+  <<: *test_definition
+  <<: *centos7_cuda9_1_only
+
+centos7-v9.1-deploy:
+  <<: *deploy_definition
+  <<: *centos7_cuda9_1_only
+
 # ubi7-v10.1:
   # <<: *cuda_base_definition
 
@@ -249,3 +270,24 @@ ubi7-v9.2-test:
 ubi7-v9.2-deploy:
   <<: *deploy_definition
   <<: *ubi7_cuda9_2_only
+
+.ubi7_cuda9_1_only: &ubi7_cuda9_1_only
+  only:
+    variables:
+      - $ubi7_cuda9_1 == "true"
+
+ubi7-v9.1:
+  <<: *cuda_base_definition
+  <<: *ubi7_cuda9_1_only
+
+ubi7-v9.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_cuda9_1_only
+
+ubi7-v9.1-test:
+  <<: *test_definition
+  <<: *ubi7_cuda9_1_only
+
+ubi7-v9.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_cuda9_1_only
