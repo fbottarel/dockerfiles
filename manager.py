@@ -86,10 +86,26 @@ class ManagerTrigger(Manager):
     manifest_current = None
     manifest_previous = None
     changed = set()
+    trigger_all = False
 
     dry_run = cli.Flag(
         ["-n", "--dry-run"], help="Show output but don't make any changes."
     )
+
+    def check_explicit_trigger(self):
+        self.repo = git.Repo(pathlib.Path("."))
+        commit = self.repo.commit("HEAD")
+        rgx = re.compile(r"ci.trigger = (.*)")
+        log.debug("Commit message: %s", repr(commit.message))
+        match = rgx.search(commit.message)
+        if match:
+            log.info("Explicit trigger found in commit message")
+            if match.groups(0)[0] == "all":
+                log.info("Triggering ALL of the jobs!")
+                self.trigger_all = True
+                return True
+        log.debug("No explicit trigger found in commit message.")
+        return False
 
     def load_last_manifest(self):
         self.repo = git.Repo(pathlib.Path("."))
@@ -187,8 +203,11 @@ class ManagerTrigger(Manager):
         token = os.getenv("CI_JOB_TOKEN")
         ref = os.getenv("CI_COMMIT_REF_NAME")
         payload = {"token": token, "ref": ref, "variables[TRIGGER]": "true"}
-        for job in self.changed:
-            payload[f"variables[{job}]"] = "true"
+        if self.trigger_all:
+            payload[f"variables[all]"] = "true"
+        else:
+            for job in self.changed:
+                payload[f"variables[{job}]"] = "true"
         log.debug("payload %s", payload)
         if not self.dry_run:
             r = requests.post(
@@ -200,9 +219,10 @@ class ManagerTrigger(Manager):
             log.info("In dry-run mode so not making gitlab trigger POST")
 
     def main(self):
-        self.load_last_manifest()
-        self.load_current_manifest()
-        if self.deep_compare():
+        if not self.check_explicit_trigger():
+            self.load_last_manifest()
+            self.load_current_manifest()
+        if self.trigger_all or self.deep_compare():
             self.kickoff()
 
 

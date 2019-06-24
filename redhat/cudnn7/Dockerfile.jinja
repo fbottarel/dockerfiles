@@ -5,10 +5,9 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 ENV CUDNN_VERSION {{ cuda.cudnn7.version }}
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
+{% set cudnn7_version = cuda.cudnn7.version -%}
 {% if cuda.version.major == "9" and cuda.version.minor == "1" -%}
   {% set cudnn7_version = cuda.cudnn7.version[:3] -%}
-{% else -%}
-  {% set cudnn7_version = cuda.cudnn7.version -%}
 {% endif -%}
 
 # cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
