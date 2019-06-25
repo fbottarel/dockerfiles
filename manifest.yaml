@@ -49,6 +49,17 @@ redhat6: &redhat6_definition
       cudnn7:
         version: "7.6.0.64"
         sha256sum: "90659ea77734b7b671afe930c9898d21a13b888998f1dd3940cc57d6b2f29b86"
+    v8.0:
+      build_version: 61
+      cudnn7:
+        version: "7.1.2.21"
+        sha256sum: "a5dfd656811fe9c43d87c40338cec5e1a85ad5a9cd3b5f1e95dd67d5e126aacc"
+      cudnn6:
+        version: "6.0.21"
+        sha256sum: "9b09110af48c9a4d7b6344eb4b3e344daa84987ed6177d5c44319732f3bb7f9c"
+      cudnn5:
+        version: "5.1.10"
+        sha256sum: "c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce"
 
 redhat7: &redhat7_definition
   template_path: redhat
@@ -81,6 +92,17 @@ redhat7: &redhat7_definition
       cudnn7:
         version: "7.6.0.64"
         sha256sum: "90659ea77734b7b671afe930c9898d21a13b888998f1dd3940cc57d6b2f29b86"
+    v8.0:
+      build_version: 61
+      cudnn7:
+        version: "7.1.2.21"
+        sha256sum: "a5dfd656811fe9c43d87c40338cec5e1a85ad5a9cd3b5f1e95dd67d5e126aacc"
+      cudnn6:
+        version: "6.0.21"
+        sha256sum: "9b09110af48c9a4d7b6344eb4b3e344daa84987ed6177d5c44319732f3bb7f9c"
+      cudnn5:
+        version: "5.1.10"
+        sha256sum: "c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce"
 
 centos6:
   base_image: centos:6

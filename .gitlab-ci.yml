@@ -46,6 +46,22 @@ stages:
   tags:
     - cuda-docker-10.1
 
+# Only used for CUDA 8.0, will be removed once CUDA 8 support is dropped
+.cuda_template_depricated: &cuda_definition_deprecated
+  stage: cuda
+  <<: *tags_definition
+  script:
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "build/${OS}/${CUDA_VERSION}/runtime"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/devel"
+    - if [[ "${NO_OS_SUFFIX}" == true ]]; then
+          docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
+          docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
+      fi
+    - if [[ "${LATEST}" == true ]]; then
+          docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:latest";
+      fi
+
 .cuda_base_template: &cuda_base_definition
   stage: cuda
   <<: *tags_definition
@@ -237,6 +253,36 @@ centos6-v9.0-deploy:
   <<: *deploy_definition
   <<: *centos6_cuda9_0_only
 
+.centos6_cuda8_0_only: &centos6_cuda8_0_only
+  only:
+    variables:
+      - $centos6_cuda8_0 == "true"
+      - $all == "true"
+
+centos6-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *centos6_cuda8_0_only
+
+centos6-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos6_cuda8_0_only
+
+centos6-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *centos6_cuda8_0_only
+
+centos6-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *centos6_cuda8_0_only
+
+centos6-v8.0-test:
+  <<: *test_definition
+  <<: *centos6_cuda8_0_only
+
+centos6-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *centos6_cuda8_0_only
+
 .centos7_cuda10.1_only: &centos7_cuda10_1_only
   only:
     variables:
@@ -338,21 +384,51 @@ centos7-v9.1-deploy:
       - $centos7_cuda9_0 == "true"
       - $all == "true"
 
-centos7-v9.1:
+centos7-v9.0:
   <<: *cuda_base_definition
   <<: *centos7_cuda9_0_only
 
-centos7-v9.1-cudnn7:
+centos7-v9.0-cudnn7:
   <<: *cudnn_definition
   <<: *centos7_cuda9_0_only
 
-centos7-v9.1-test:
+centos7-v9.0-test:
   <<: *test_definition
   <<: *centos7_cuda9_0_only
 
-centos7-v9.1-deploy:
+centos7-v9.0-deploy:
   <<: *deploy_definition
   <<: *centos7_cuda9_0_only
+
+.centos7_cuda8_0_only: &centos7_cuda8_0_only
+  only:
+    variables:
+      - $centos7_cuda8_0 == "true"
+      - $all == "true"
+
+centos7-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *centos7_cuda8_0_only
+
+centos7-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_cuda8_0_only
+
+centos7-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *centos7_cuda8_0_only
+
+centos7-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *centos7_cuda8_0_only
+
+centos7-v8.0-test:
+  <<: *test_definition
+  <<: *centos7_cuda8_0_only
+
+centos7-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *centos7_cuda8_0_only
 
 .ubi7_cuda10_1_only: &ubi7_cuda10_1_only
   only:
@@ -448,18 +524,48 @@ ubi7-v9.1-deploy:
       - $ubi7_cuda9_0 == "true"
       - $all == "true"
 
-ubi7-v9.1:
+ubi7-v9.0:
   <<: *cuda_base_definition
   <<: *ubi7_cuda9_0_only
 
-ubi7-v9.1-cudnn7:
+ubi7-v9.0-cudnn7:
   <<: *cudnn_definition
   <<: *ubi7_cuda9_0_only
 
-ubi7-v9.1-test:
+ubi7-v9.0-test:
   <<: *test_definition
   <<: *ubi7_cuda9_0_only
 
-ubi7-v9.1-deploy:
+ubi7-v9.0-deploy:
   <<: *deploy_definition
   <<: *ubi7_cuda9_0_only
+
+.ubi7_cuda8_0_only: &ubi7_cuda8_0_only
+  only:
+    variables:
+      - $ubi7_cuda8_0 == "true"
+      - $all == "true"
+
+ubi7-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *ubi7_cuda8_0_only
+
+ubi7-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_cuda8_0_only
+
+ubi7-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *ubi7_cuda8_0_only
+
+ubi7-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *ubi7_cuda8_0_only
+
+ubi7-v8.0-test:
+  <<: *test_definition
+  <<: *ubi7_cuda8_0_only
+
+ubi7-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_cuda8_0_only

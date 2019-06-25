@@ -87,6 +87,7 @@ class ManagerTrigger(Manager):
     manifest_previous = None
     changed = set()
     trigger_all = False
+    trigger_explicit = []
 
     dry_run = cli.Flag(
         ["-n", "--dry-run"], help="Show output but don't make any changes."
@@ -95,14 +96,24 @@ class ManagerTrigger(Manager):
     def check_explicit_trigger(self):
         self.repo = git.Repo(pathlib.Path("."))
         commit = self.repo.commit("HEAD")
-        rgx = re.compile(r"ci.trigger = (.*)")
+        rgx = re.compile(r"ci\.trigger = (.*)")
         log.debug("Commit message: %s", repr(commit.message))
         match = rgx.search(commit.message)
         if match:
             log.info("Explicit trigger found in commit message")
-            if match.groups(0)[0] == "all":
+            pipeline = match.groups(0)[0].lower()
+            if "all" in pipeline:
                 log.info("Triggering ALL of the jobs!")
                 self.trigger_all = True
+                return True
+            else:
+                if "," in pipeline:
+                    for job in pipeline.split(","):
+                        log.info("Triggering '%s'", job.strip())
+                        self.trigger_explicit.append(job.strip())
+                else:
+                    log.info("Triggering '%s'", pipeline)
+                    self.trigger_explicit.append(pipeline)
                 return True
         log.debug("No explicit trigger found in commit message.")
         return False
@@ -204,7 +215,10 @@ class ManagerTrigger(Manager):
         ref = os.getenv("CI_COMMIT_REF_NAME")
         payload = {"token": token, "ref": ref, "variables[TRIGGER]": "true"}
         if self.trigger_all:
-            payload[f"variables[all]"] = "true"
+            payload["variables[all]"] = "true"
+        elif self.trigger_explicit:
+            for job in self.trigger_explicit:
+                payload[f"variables[{job}]"] = "true"
         else:
             for job in self.changed:
                 payload[f"variables[{job}]"] = "true"
@@ -222,7 +236,7 @@ class ManagerTrigger(Manager):
         if not self.check_explicit_trigger():
             self.load_last_manifest()
             self.load_current_manifest()
-        if self.trigger_all or self.deep_compare():
+        if self.trigger_all or self.trigger_explicit or self.deep_compare():
             self.kickoff()
 
 
@@ -420,7 +434,23 @@ class ManagerGenerate(Manager):
                 continue
             self.cuda[k] = v
 
-    def output_template(self, template_path, output_path):
+    # For cudnn templates, we need a custom template context
+    def output_cudnn_template(self, cudnn_version, template_path, output_path):
+        new_ctx = {
+            "cudnn": self.cuda[cudnn_version],
+            "version": self.cuda["version"],
+            "tag_suffix": self.cuda["tag_suffix"],
+            "os": self.cuda["os"],
+        }
+        #  if self.cuda["version"]["major"] <= "9":
+        #  # cudnn versions before cuda 9.0 do not include a revision number in the version
+        #  new_ctx["cudnn"]["version"] = self.cuda[cudnn_version]["version"][:3]
+        self.output_template(
+            template_path=template_path, output_path=output_path, ctx=new_ctx
+        )
+
+    def output_template(self, template_path, output_path, ctx=None):
+        ctx = ctx if ctx is not None else self.cuda
         rgx = re.compile(r"^[\w]+-")
         # If the template path contains "{distro_name}-" and it does not match the target distro, skip the template
         if any(distro in template_path.name for distro in self.supported_distro_list()):
@@ -445,7 +475,7 @@ class ManagerGenerate(Manager):
                 new_output_path.mkdir(parents=True)
             log.info(f"Writing {new_output_path}/{new_filename}")
             with open(f"{new_output_path}/{new_filename}", "w") as f2:
-                f2.write(template.render(cuda=self.cuda))
+                f2.write(template.render(cuda=ctx))
 
     def write_test(self, template_path, output_path):
         with open(template_path) as f:
@@ -468,6 +498,13 @@ class ManagerGenerate(Manager):
                 return
             raise glom.PathAccessError
         return data
+
+    def cudnn_versions(self):
+        obj = []
+        for k, _ in self.cuda.items():
+            if k.startswith("cudnn"):
+                obj.append(k)
+        return obj
 
     def prepare_context(self):
         conf = self.parent.manifest
@@ -508,6 +545,41 @@ class ManagerGenerate(Manager):
         log.info("cuda version %s", glom.glom(self.cuda, glom.Path("version")))
         log.debug("template context %s", pformat(self.cuda))
 
+    # CUDA 8 uses a deprecated image layout
+    def generate_dockerscripts_cuda_8(self):
+        for img in ["devel", "runtime"]:
+            base = img
+            if img == "runtime":
+                # for CUDA 8, runtime == base
+                base = "base"
+            # cuda image
+            temp_path = self.parent.manifest[f"{self.distro}{self.distro_version}"][
+                "template_path"
+            ]
+            log.debug("temp_path: %s, output_path: %s", temp_path, self.output_path)
+            self.output_template(
+                template_path=pathlib.Path(f"{temp_path}/{base}/Dockerfile.jinja"),
+                output_path=pathlib.Path(f"{self.output_path}/{img}"),
+            )
+            # We need files in the base directory
+            for filename in pathlib.Path(f"{temp_path}/{base}").glob("*"):
+                if "Dockerfile" in filename.name:
+                    continue
+                log.debug("Checking %s", filename)
+                if ".jinja" in filename.name:
+                    self.output_template(filename, f"{self.output_path}/{img}")
+                else:
+                    log.info(f"Copying {filename} to {self.output_path}/{img}")
+                    shutil.copy(filename, f"{self.output_path}/{img}")
+            # cudnn image
+            for vers in self.cudnn_versions():
+                self.cuda[vers]["target"] = img
+                self.output_cudnn_template(
+                    cudnn_version=vers,
+                    template_path=pathlib.Path(f"{temp_path}/cudnn/Dockerfile.jinja"),
+                    output_path=pathlib.Path(f"{self.output_path}/{img}/{vers}"),
+                )
+
     def generate_dockerscripts(self):
         for img in ["base", "devel", "runtime"]:
             # cuda image
@@ -531,11 +603,15 @@ class ManagerGenerate(Manager):
                     shutil.copy(filename, f"{self.output_path}/{img}")
             # cudnn image
             if img in ["runtime", "devel"]:
-                self.cuda["cudnn7"]["target"] = img
-                self.output_template(
-                    template_path=pathlib.Path(f"{temp_path}/cudnn7/Dockerfile.jinja"),
-                    output_path=pathlib.Path(f"{self.output_path}/{img}/cudnn7"),
-                )
+                for vers in self.cudnn_versions():
+                    self.cuda[vers]["target"] = img
+                    self.output_cudnn_template(
+                        cudnn_version=vers,
+                        template_path=pathlib.Path(
+                            f"{temp_path}/cudnn/Dockerfile.jinja"
+                        ),
+                        output_path=pathlib.Path(f"{self.output_path}/{img}/{vers}"),
+                    )
 
     def supported_distro_list(self):
         rgx = re.compile(fr"([a-z]+)([\d+\.]+)?")
@@ -575,7 +651,10 @@ class ManagerGenerate(Manager):
         log.debug(f"Creating {self.output_path}")
         self.output_path.mkdir(parents=True, exist_ok=False)
         self.prepare_context()
-        self.generate_dockerscripts()
+        if self.cuda_version == "8.0":
+            self.generate_dockerscripts_cuda_8()
+        else:
+            self.generate_dockerscripts()
         self.generate_testscripts()
         log.info("Done")
 

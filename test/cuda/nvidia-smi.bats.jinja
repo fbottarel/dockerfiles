@@ -2,7 +2,11 @@
 
 load helpers
 
-image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-base-${OS}${IMAGE_TAG_SUFFIX}"
+{% set base_img = "base" -%}
+{% if cuda.version.major == "8" -%}
+{% set base_img = "runtime" -%}
+{% endif -%}
+image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ base_img }}-${OS}${IMAGE_TAG_SUFFIX}"
 
 function setup() {
     check_runtime
