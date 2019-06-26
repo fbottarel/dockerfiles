@@ -26,29 +26,6 @@ RUN yum -y install /rpms/* && rm -rf /rpms && yum -y clean all && rm -rf /var/ca
     mv -f /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl && \
     build-locale-archive && \
     find /usr/share/locale -mindepth 1 -maxdepth 1 -not \( -name 'en*' -or -name 'locale.alias' \) | xargs rm -rf
-
-# FROM centos-with-patched-glibc
-# ENV AUDITWHEEL_PLAT manylinux2010_x86_64
-# ENV LC_ALL en_US.UTF-8
-# ENV LANG en_US.UTF-8
-# ENV LANGUAGE en_US.UTF-8
-# ENV PATH /opt/rh/devtoolset-8/root/usr/bin:$PATH
-# ENV LD_LIBRARY_PATH /opt/rh/devtoolset-8/root/usr/lib64:/opt/rh/devtoolset-8/root/usr/lib:/opt/rh/devtoolset-8/root/usr/lib64/dyninst:/opt/rh/devtoolset-8/root/usr/lib/dyninst:/usr/local/lib64:/usr/local/lib
-# ENV PKG_CONFIG_PATH /usr/local/lib/pkgconfig
-# COPY --from=centos-with-vsyscall /manylinux/docker/build_scripts /build_scripts
-# RUN sed -i "$(($(wc -l < /build_scripts/build.sh)-7)),\$d" /build_scripts/build.sh
-# RUN bash /build_scripts/build.sh && rm -rf /build_scripts
-#
-# # Running this from within "bash build.sh" results in "Bus error (core dumped)" from build-locale-archive
-# # if we updated glibc, we need to strip locales again...
-# RUN localedef --list-archive | grep -v -i ^en_US.utf8 | xargs localedef --delete-from-archive
-# RUN mv -f /usr/lib/locale/locale-archive /usr/lib/locale/locale-archive.tmpl
-# RUN build-locale-archive
-# RUN find /usr/share/locale -mindepth 1 -maxdepth 1 -not \( -name 'en*' -or -name 'locale.alias' \) | xargs rm -rf
-# RUN find /usr/local/share/locale -mindepth 1 -maxdepth 1 -not \( -name 'en*' -or -name 'locale.alias' \) | xargs rm -rf
-# RUN rm -rf /usr/local/share/man
-#
-# ENV SSL_CERT_FILE=/opt/_internal/certs.pem
 {% else -%}
 FROM {{ cuda.base_image }}
 {% endif -%}
@@ -99,9 +76,3 @@ ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV NVIDIA_REQUIRE_CUDA "cuda>={{ cuda.version.major }}.{{ cuda.version.minor }} {{ cuda.requires }}"
-
-{% if cuda.os.distro == "ubi" -%}
-# UBI redhat repos contain i686 packages that cause multilib conflicts when installing cuda-samples
-RUN echo "exclude=*.i686" >> /etc/yum.conf
-COPY rhelcompute.repo /etc/yum.repos.d/rhelcompute.repo
-{% endif -%}

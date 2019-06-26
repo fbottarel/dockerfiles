@@ -16,11 +16,12 @@ function teardown() {
     cat <<EOF > Dockerfile
     FROM ${image}
     {% if cuda.os.distro == "ubuntu" -%}
-    RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    RUN apt-get update && apt-get install -y make g++ git
     {% else -%}
-    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}{% if cuda.os.distro == "ubi" %} --disablerepo=ubi-{{ cuda.os.version }}{% endif %}
+    RUN yum install -y make g++ git
     {% endif -%}
-    WORKDIR /usr/local/cuda-{{ cuda.version.major }}.{{ cuda.version.minor }}/samples/1_Utilities/deviceQuery
+    RUN git clone https://github.com/NVIDIA/cuda-samples.git
+    WORKDIR cuda-samples/deviceQuery/
     RUN make
     CMD ./deviceQuery
 EOF
@@ -33,13 +34,14 @@ EOF
     cat <<EOF > Dockerfile
     FROM $image
     {% if cuda.os.distro == "ubuntu" -%}
-    RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    RUN apt-get update && apt-get install -y make g++ git
     {% else -%}
-    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}{% if cuda.os.distro == "ubi" %} --disablerepo=ubi-{{ cuda.os.version }}{% endif %}
+    RUN yum install -y make g++ git
     {% endif -%}
-    WORKDIR /usr/local/cuda/samples/0_Simple/vectorAddDrv
+    RUN git clone https://github.com/NVIDIA/cuda-samples.git
+    WORKDIR cuda-samples/vectorAddDrv_nvrtc
     RUN make
-    CMD ./vectorAddDrv
+    CMD ./vectorAddDrv_nvrtc
 EOF
     docker_build -t "${image}-${BATS_TEST_NAME}" .
     docker_run --rm --runtime=nvidia ${image}-${BATS_TEST_NAME}
@@ -50,11 +52,12 @@ EOF
     cat <<EOF > Dockerfile
     FROM $image
     {% if cuda.os.distro == "ubuntu" -%}
-    RUN apt-get update && apt-get install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}
+    RUN apt-get update && apt-get install -y make g++ git
     {% else -%}
-    RUN yum install -y cuda-samples-{{ cuda.version.major }}-{{ cuda.version.minor }}{% if cuda.os.distro == "ubi" %} --disablerepo=ubi-{{ cuda.os.version }}{% endif %}
+    RUN yum install -y make g++ git
     {% endif -%}
-    WORKDIR /usr/local/cuda/samples/0_Simple/matrixMulDrv
+    RUN git clone https://github.com/NVIDIA/cuda-samples.git
+    WORKDIR cuda-samples/matrixMulDrv
     RUN make
     CMD ./matrixMulDrv
 EOF

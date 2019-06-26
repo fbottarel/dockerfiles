@@ -67,6 +67,31 @@ class Manager(cli.Application):
         """Triggers pipelines on gitlab"""
         pass
 
+    def cudnn_versions(self):
+        obj = []
+        for k, _ in self.cuda.items():
+            if k.startswith("cudnn"):
+                obj.append(k)
+        return obj
+
+    def supported_distro_list(self):
+        rgx = re.compile(fr"([a-z]+)([\d+\.]+)?")
+        ls = []
+        for key in self.parent.manifest.keys():
+            if rgx.match(key):
+                ls.append(key)
+        return ls
+
+    def ci_distro_variables(self, distro):
+        rgx = re.compile(fr"^\s+- \$(?!all)({distro}[\w]+) == \"true\"$")
+        ci_vars = []
+        with open(".gitlab-ci.yml", "r") as fp:
+            for _, line in enumerate(fp):
+                match = rgx.match(line)
+                if match:
+                    ci_vars.append(match.groups(0)[0])
+        return ci_vars
+
     def main(self):
         self._load_app_config()
         if not self.nested_command:  # will be ``None`` if no sub-command follows
@@ -94,6 +119,7 @@ class ManagerTrigger(Manager):
     )
 
     def check_explicit_trigger(self):
+        # FIXME: Need to unit test this!
         self.repo = git.Repo(pathlib.Path("."))
         commit = self.repo.commit("HEAD")
         rgx = re.compile(r"ci\.trigger = (.*)")
@@ -107,13 +133,18 @@ class ManagerTrigger(Manager):
                 self.trigger_all = True
                 return True
             else:
+                jobs = []
+                jobs.append(pipeline)
                 if "," in pipeline:
-                    for job in pipeline.split(","):
-                        log.info("Triggering '%s'", job.strip())
-                        self.trigger_explicit.append(job.strip())
-                else:
-                    log.info("Triggering '%s'", pipeline)
-                    self.trigger_explicit.append(pipeline)
+                    jobs = pipeline.split(",")
+                for job in jobs:
+                    if "_cuda" not in job:
+                        for cvar in self.ci_distro_variables(job):
+                            log.info("Triggering '%s'", cvar)
+                            self.trigger_explicit.append(cvar)
+                    else:
+                        log.info("Triggering '%s'", job)
+                        self.trigger_explicit.append(job)
                 return True
         log.debug("No explicit trigger found in commit message.")
         return False
@@ -442,9 +473,6 @@ class ManagerGenerate(Manager):
             "tag_suffix": self.cuda["tag_suffix"],
             "os": self.cuda["os"],
         }
-        #  if self.cuda["version"]["major"] <= "9":
-        #  # cudnn versions before cuda 9.0 do not include a revision number in the version
-        #  new_ctx["cudnn"]["version"] = self.cuda[cudnn_version]["version"][:3]
         self.output_template(
             template_path=template_path, output_path=output_path, ctx=new_ctx
         )
@@ -498,13 +526,6 @@ class ManagerGenerate(Manager):
                 return
             raise glom.PathAccessError
         return data
-
-    def cudnn_versions(self):
-        obj = []
-        for k, _ in self.cuda.items():
-            if k.startswith("cudnn"):
-                obj.append(k)
-        return obj
 
     def prepare_context(self):
         conf = self.parent.manifest
@@ -612,14 +633,6 @@ class ManagerGenerate(Manager):
                         ),
                         output_path=pathlib.Path(f"{self.output_path}/{img}/{vers}"),
                     )
-
-    def supported_distro_list(self):
-        rgx = re.compile(fr"([a-z]+)([\d+\.]+)?")
-        ls = []
-        for key in self.parent.manifest.keys():
-            if rgx.match(key):
-                ls.append(key)
-        return ls
 
     def generate_testscripts(self):
         for filename in pathlib.Path("test").glob("*/*.jinja"):
