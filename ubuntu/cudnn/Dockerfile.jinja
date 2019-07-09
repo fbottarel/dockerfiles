@@ -1,0 +1,12 @@
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.tag_suffix }}
+LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+
+ENV CUDNN_VERSION {{ cuda.cudnn.version }}
+LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+            libcudnn7=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
+            libcudnn7-dev=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} && \
+    apt-mark hold libcudnn7 && \
+    rm -rf /var/lib/apt/lists/*

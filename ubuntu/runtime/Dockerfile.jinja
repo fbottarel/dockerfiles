@@ -1,0 +1,12 @@
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-base-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.tag_suffix }}
+LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+
+ENV NCCL_VERSION {{ cuda.nccl_version }}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cuda-libraries-$CUDA_PKG_VERSION \
+        cuda-nvtx-$CUDA_PKG_VERSION \
+        libnccl2=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} && \
+    apt-mark hold libnccl2 && \
+    rm -rf /var/lib/apt/lists/*

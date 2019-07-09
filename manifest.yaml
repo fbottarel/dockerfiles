@@ -117,3 +117,25 @@ ubi7:
   exclude_repos:
     - docker.io
   <<: *redhat7_definition
+
+ubuntu18.04:
+  base_image: ubuntu:18.04
+  template_path: ubuntu
+  cuda:
+    v10.1:
+      build_version: 168
+      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
+      nccl_version: 2.4.2
+      cudnn7:
+        version: "7.6.1.34"
+    v10.0:
+      build_version: 130
+      nccl_version: 2.4.2
+      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
+      cudnn7:
+        version: "7.6.1.34"
+    v9.2:
+      build_version: 148
+      nccl_version: 2.4.2
+      cudnn7:
+        version: "7.6.1.34"
