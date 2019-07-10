@@ -2,11 +2,19 @@ ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.tag_suffix }}
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
+{% if cuda.version.major | int == 8 -%}
+RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list
+
+{% endif -%}
+
 ENV CUDNN_VERSION {{ cuda.cudnn.version }}
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-            libcudnn7=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
-            libcudnn7-dev=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} && \
-    apt-mark hold libcudnn7 && \
+    libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
+{% if cuda.cudnn.target == "devel" -%}
+    libcudnn{{ cuda.cudnn.version[0] }}-dev=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
+{% endif -%}
+    && \
+    apt-mark hold libcudnn{{ cuda.cudnn.version[0] }} && \
     rm -rf /var/lib/apt/lists/*

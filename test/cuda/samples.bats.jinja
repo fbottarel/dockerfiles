@@ -1,3 +1,5 @@
+{# our samples tests do not work on cuda 8.0 #}
+{% if cuda.version.major | int >= 9 -%}
 #!/usr/bin/env bats
 
 load helpers
@@ -22,6 +24,9 @@ function teardown() {
     {% endif -%}
     RUN git clone https://github.com/NVIDIA/cuda-samples.git
     WORKDIR cuda-samples/Samples/deviceQuery/
+    {% if cuda.version.major | int < 10 -%}
+    RUN git checkout v9.2
+    {% endif -%}
     RUN make
     CMD ./deviceQuery
 EOF
@@ -40,6 +45,9 @@ EOF
     {% endif -%}
     RUN git clone https://github.com/NVIDIA/cuda-samples.git
     WORKDIR cuda-samples/Samples/vectorAdd_nvrtc
+    {% if cuda.version.major | int < 10 -%}
+    RUN git checkout v9.2
+    {% endif -%}
     RUN make
     CMD ./vectorAdd_nvrtc
 EOF
@@ -58,6 +66,9 @@ EOF
     {% endif -%}
     RUN git clone https://github.com/NVIDIA/cuda-samples.git
     WORKDIR cuda-samples/Samples/matrixMulDrv
+    {% if cuda.version.major | int < 10 -%}
+    RUN git checkout v9.2
+    {% endif -%}
     RUN make
     CMD ./matrixMulDrv
 EOF
@@ -65,3 +76,4 @@ EOF
     docker_run --rm --runtime=nvidia ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
 }
+{% endif -%}

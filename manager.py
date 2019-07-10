@@ -19,7 +19,6 @@ import shutil
 import glob
 import sys
 import io
-from pprint import pformat
 
 import jinja2
 from jinja2 import Template
@@ -178,8 +177,8 @@ class ManagerTrigger(Manager):
         rgx = re.compile(r"root\['(\w*).*\['v(\d+\.\d+)")
 
         # Uncomment this to see the files being compared in the logs
-        #  log.debug("manifest previous: %s", pformat(self.manifest_previous))
-        #  log.debug("manifest current: %s", pformat(self.manifest_current))
+        #  log.debug("manifest previous: %s", self.manifest_previous)
+        #  log.debug("manifest current: %s", self.manifest_current)
 
         ddiff = deepdiff.DeepDiff(
             self.manifest_previous,
@@ -473,6 +472,7 @@ class ManagerGenerate(Manager):
             "tag_suffix": self.cuda["tag_suffix"],
             "os": self.cuda["os"],
         }
+        log.debug("cudnn template context: %s", new_ctx)
         self.output_template(
             template_path=template_path, output_path=output_path, ctx=new_ctx
         )
@@ -514,6 +514,7 @@ class ManagerGenerate(Manager):
                 log.debug(f"Creating {test_output_path}")
                 test_output_path.mkdir(parents=True)
             log.info(f"Writing {test_output_path}/{basename[:-6]}")
+            log.debug("test template context: %s", self.cuda)
             with open(f"{test_output_path}/{basename[:-6]}", "w") as f2:
                 f2.write(template.render(cuda=self.cuda))
 
@@ -564,7 +565,7 @@ class ManagerGenerate(Manager):
             )
         )
         log.info("cuda version %s", glom.glom(self.cuda, glom.Path("version")))
-        log.debug("template context %s", pformat(self.cuda))
+        log.debug("template context %s", self.cuda)
 
     # CUDA 8 uses a deprecated image layout
     def generate_dockerscripts_cuda_8(self):
