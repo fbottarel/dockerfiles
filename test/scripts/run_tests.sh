@@ -5,9 +5,9 @@ set -e
 
 # run tests one by one in the remote tests directory.
 
-cp "test/helpers.bash" "build/${OS}/${CUDA_VERSION}/test/"
+cp "test/helpers.bash" "dist/${OS}/${CUDA_VERSION}/test/"
 
-for test in $(find "build/${OS}/${CUDA_VERSION}/test/" -iname "*.bats"); do
+for test in $(find "dist/${OS}/${CUDA_VERSION}/test/" -iname "*.bats"); do
   dir=$(dirname ${test})
   name=$(basename ${test})
   curDir=${PWD}
