@@ -30,9 +30,6 @@ before_script:
   - 'echo "CUDA_VERSION: $CUDA_VERSION"'
   - 'echo "CUDNN_VERSION: $CUDNN_VERSION"'
   - 'echo "IMAGE_TAG_SUFFIX: $IMAGE_TAG_SUFFIX"'
-  - if [[ ! -z "${TRIGGER}" ]]; then
-        python manager.py generate --os "${OS_NAME}" --os-version "${OS_VERSION}" --cuda-version "${CUDA_VERSION}" ${IMAGE_TAG_SUFFIX:+--tag-suffix $IMAGE_TAG_SUFFIX};
-    fi
 
 stages:
   # trigger stage is a workaround until https://gitlab.com/gitlab-org/gitlab-ce/issues/22972 is implemented
@@ -51,9 +48,9 @@ stages:
   stage: cuda
   <<: *tags_definition
   script:
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "build/${OS}/${CUDA_VERSION}/runtime"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "dist/${OS}/${CUDA_VERSION}/runtime"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}"
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/devel"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/devel"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
           docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
           docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
@@ -66,11 +63,11 @@ stages:
   stage: cuda
   <<: *tags_definition
   script:
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "build/${OS}/${CUDA_VERSION}/base"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "dist/${OS}/${CUDA_VERSION}/base"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/runtime"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/runtime"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "build/${OS}/${CUDA_VERSION}/devel"
+                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/devel"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
         docker tag "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-base";
         docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
@@ -86,10 +83,10 @@ stages:
   script:
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "build/${OS}/${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
+                   "dist/${OS}/${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
     - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                   "build/${OS}/${CUDA_VERSION}/devel/${CUDNN_VERSION}"
+                   "dist/${OS}/${CUDA_VERSION}/devel/${CUDNN_VERSION}"
     - if [[ "${NO_OS_SUFFIX}" == true ]]; then
         docker tag "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime";
         docker tag "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel";
@@ -782,3 +779,84 @@ ubuntu16.04-v8.0-test:
 ubuntu16.04-v8.0-deploy:
   <<: *deploy_definition
   <<: *ubuntu16_04_cuda8_0_only
+
+.ubuntu14_04_cuda10.1_only: &ubuntu14_04_cuda10_1_only
+  only:
+    variables:
+      - $ubuntu14_04_cuda10_1 == "true"
+      - $all == "true"
+
+ubuntu14.04-v10.1:
+  variables:
+    LATEST: "true"
+    NO_OS_SUFFIX: "true"
+  <<: *cuda_base_definition
+  <<: *ubuntu14_04_cuda10_1_only
+
+ubuntu14.04-v10.1-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
+  <<: *cudnn_definition
+  <<: *ubuntu14_04_cuda10_1_only
+
+ubuntu14.04-v10.1-test:
+  <<: *test_definition
+  <<: *ubuntu14_04_cuda10_1_only
+
+ubuntu14.04-v10.1-deploy:
+  variables:
+    LATEST: "true"
+  <<: *deploy_definition
+  <<: *ubuntu14_04_cuda10_1_only
+
+.ubuntu14_04_cuda10.0_only: &ubuntu14_04_cuda10_0_only
+  only:
+    variables:
+      - $ubuntu14_04_cuda10_0 == "true"
+      - $all == "true"
+
+ubuntu14.04-v10.0:
+  <<: *cuda_base_definition
+  <<: *ubuntu14_04_cuda10_0_only
+
+ubuntu14.04-v10.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu14_04_cuda10_0_only
+
+ubuntu14.04-v10.0-test:
+  <<: *test_definition
+  <<: *ubuntu14_04_cuda10_0_only
+
+ubuntu14.04-v10.0-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu14_04_cuda10_0_only
+
+.ubuntu14_04_cuda8_0_only: &ubuntu14_04_cuda8_0_only
+  only:
+    variables:
+      - $ubuntu14_04_cuda8_0 == "true"
+      - $all == "true"
+
+ubuntu14.04-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *ubuntu14_04_cuda8_0_only
+
+ubuntu14.04-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu14_04_cuda8_0_only
+
+ubuntu14.04-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *ubuntu14_04_cuda8_0_only
+
+ubuntu14.04-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *ubuntu14_04_cuda8_0_only
+
+ubuntu14.04-v8.0-test:
+  <<: *test_definition
+  <<: *ubuntu14_04_cuda8_0_only
+
+ubuntu14.04-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu14_04_cuda8_0_only

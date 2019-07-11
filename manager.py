@@ -658,7 +658,7 @@ class ManagerGenerate(Manager):
     def main(self):
         log.debug("Have distro: %s version: %s", self.distro, self.distro_version)
         target = f"{self.distro}{self.distro_version}"
-        self.output_path = pathlib.Path(f"build/{target}/{self.cuda_version}")
+        self.output_path = pathlib.Path(f"dist/{target}/{self.cuda_version}")
         if self.output_path.exists:
             log.debug(f"Removing {self.output_path}")
             rm["-rf", self.output_path]()

@@ -3,7 +3,8 @@ FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cud
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 {% if cuda.version.major | int == 8 -%}
-RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list
+RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu{{ cuda.os.version | replace(".",
+"") }}/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list
 
 {% endif -%}
 
