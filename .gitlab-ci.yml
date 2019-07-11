@@ -567,6 +567,146 @@ ubi7-v8.0-deploy:
   <<: *deploy_definition
   <<: *ubi7_cuda8_0_only
 
+.ubi8_cuda10_1_only: &ubi8_cuda10_1_only
+  only:
+    variables:
+      - $ubi8_cuda10_1 == "true"
+      - $all == "true"
+
+ubi8-v10.1:
+  <<: *cuda_base_definition
+  <<: *ubi8_cuda10_1_only
+
+ubi8-v10.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda10_1_only
+
+ubi8-v10.1-test:
+  <<: *test_definition
+  <<: *ubi8_cuda10_1_only
+
+ubi8-v10.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_cuda10_1_only
+
+.ubi8_cuda10_0_only: &ubi8_cuda10_0_only
+  only:
+    variables:
+      - $ubi8_cuda10_0 == "true"
+      - $all == "true"
+
+ubi8-v10.0:
+  <<: *cuda_base_definition
+  <<: *ubi8_cuda10_0_only
+
+ubi8-v10.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda10_0_only
+
+ubi8-v10.0-test:
+  <<: *test_definition
+  <<: *ubi8_cuda10_0_only
+
+ubi8-v10.0-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_cuda10_0_only
+
+.ubi8_cuda9_2_only: &ubi8_cuda9_2_only
+  only:
+    variables:
+      - $ubi8_cuda9_2 == "true"
+      - $all == "true"
+
+ubi8-v9.2:
+  <<: *cuda_base_definition
+  <<: *ubi8_cuda9_2_only
+
+ubi8-v9.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda9_2_only
+
+ubi8-v9.2-test:
+  <<: *test_definition
+  <<: *ubi8_cuda9_2_only
+
+ubi8-v9.2-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_cuda9_2_only
+
+.ubi8_cuda9_1_only: &ubi8_cuda9_1_only
+  only:
+    variables:
+      - $ubi8_cuda9_1 == "true"
+      - $all == "true"
+
+ubi8-v9.1:
+  <<: *cuda_base_definition
+  <<: *ubi8_cuda9_1_only
+
+ubi8-v9.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda9_1_only
+
+ubi8-v9.1-test:
+  <<: *test_definition
+  <<: *ubi8_cuda9_1_only
+
+ubi8-v9.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_cuda9_1_only
+
+.ubi8_cuda9_0_only: &ubi8_cuda9_0_only
+  only:
+    variables:
+      - $ubi8_cuda9_0 == "true"
+      - $all == "true"
+
+ubi8-v9.0:
+  <<: *cuda_base_definition
+  <<: *ubi8_cuda9_0_only
+
+ubi8-v9.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda9_0_only
+
+ubi8-v9.0-test:
+  <<: *test_definition
+  <<: *ubi8_cuda9_0_only
+
+ubi8-v9.0-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_cuda9_0_only
+
+.ubi8_cuda8_0_only: &ubi8_cuda8_0_only
+  only:
+    variables:
+      - $ubi8_cuda8_0 == "true"
+      - $all == "true"
+
+ubi8-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *ubi8_cuda8_0_only
+
+ubi8-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda8_0_only
+
+ubi8-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda8_0_only
+
+ubi8-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda8_0_only
+
+ubi8-v8.0-test:
+  <<: *test_definition
+  <<: *ubi8_cuda8_0_only
+
+ubi8-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_cuda8_0_only
+
 .ubuntu18_04_cuda10_1_only: &ubuntu18_04_cuda10_1_only
   only:
     variables:

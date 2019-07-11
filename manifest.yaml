@@ -103,6 +103,50 @@ redhat7: &redhat7_definition
         version: "5.1.10"
         sha256sum: "c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce"
 
+redhat8: &redhat8_definition
+  template_path: redhat
+  cuda:
+    # FIXME: change to rhel8 once we have packages
+    repo_url: "http://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64"
+    v10.1:
+      build_version: 168
+      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
+      cudnn7:
+        version: "7.6.1.34"
+        sha256sum: "9885e38e71fa9844b3e4fb7c7211af41b24c9f76a9014f9d5e1768ddff2087dc"
+    v10.0:
+      build_version: 130
+      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
+      cudnn7:
+        version: "7.6.1.34"
+        sha256sum: "af0791cba08468a4bf2a4ef15a787dac261f41219caaf335984d47d11eca19ba"
+    v9.2:
+      build_version: 148
+      cudnn7:
+        version: "7.6.1.34"
+        sha256sum: "0d38735b06a1daf518c7ad4977fdb987a470f7793d95542ac9897e214ab1b006"
+    v9.1:
+      build_version: 85
+      cudnn7:
+        version: "7.1.2.21"
+        sha256sum: "c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec"
+    v9.0:
+      build_version: 176
+      cudnn7:
+        version: "7.6.1.34"
+        sha256sum: "57a921b20be1d3d1192e59ecfdee61c55e06e530a6d414a013083fa81a77f1c5"
+    v8.0:
+      build_version: 61
+      cudnn7:
+        version: "7.1.2.21"
+        sha256sum: "a5dfd656811fe9c43d87c40338cec5e1a85ad5a9cd3b5f1e95dd67d5e126aacc"
+      cudnn6:
+        version: "6.0.21"
+        sha256sum: "9b09110af48c9a4d7b6344eb4b3e344daa84987ed6177d5c44319732f3bb7f9c"
+      cudnn5:
+        version: "5.1.10"
+        sha256sum: "c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce"
+
 centos6:
   base_image: centos:6
   <<: *redhat6_definition
@@ -113,9 +157,11 @@ centos7:
 
 ubi7:
   base_image: registry.access.redhat.com/ubi7/ubi:latest
-  exclude_repos:
-    - docker.io
   <<: *redhat7_definition
+
+ubi8:
+  base_image: registry.access.redhat.com/ubi8/ubi:latest
+  <<: *redhat8_definition
 
 ubuntu18.04:
   base_image: ubuntu:18.04

@@ -33,7 +33,12 @@ FROM {{ cuda.base_image }}
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
-    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/rhel{{ cuda.os.version }}/x86_64/7fa2af80.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \
+{% set version = cuda.os.version -%}
+{# FIXME: change once we have rhel8 packages -#}
+{% if cuda.os.version | int == 8 -%}
+    {% set version = 7 -%}
+{% endif -%}
+    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/rhel{{ version }}/x86_64/7fa2af80.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \
     echo "$NVIDIA_GPGKEY_SUM  /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA" | sha256sum -c {% if cuda.os.version | int != 6 -%}--strict {% endif -%} -
 
 COPY cuda.repo /etc/yum.repos.d/cuda.repo

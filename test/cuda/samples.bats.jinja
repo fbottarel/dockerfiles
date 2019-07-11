@@ -1,4 +1,4 @@
-{# our samples tests do not work on cuda 8.0 #}
+{# samples tests do not work on cuda 8.0 #}
 {% if cuda.version.major | int >= 9 -%}
 #!/usr/bin/env bats
 
@@ -19,6 +19,8 @@ function teardown() {
     FROM ${image}
     {% if cuda.os.distro == "ubuntu" -%}
     RUN apt-get update && apt-get install -y make g++ git
+    {% elif cuda.os.version | int == 8 -%}
+    RUN dnf install -y make gcc-c++ git
     {% else -%}
     RUN yum install -y make g++ git
     {% endif -%}
@@ -40,6 +42,8 @@ EOF
     FROM $image
     {% if cuda.os.distro == "ubuntu" -%}
     RUN apt-get update && apt-get install -y make g++ git
+    {% elif cuda.os.version | int == 8 -%}
+    RUN dnf install -y make gcc-c++ git
     {% else -%}
     RUN yum install -y make g++ git
     {% endif -%}
@@ -56,11 +60,15 @@ EOF
     [ "$status" -eq 0 ]
 }
 
+{% if cuda.os.version | int != 8 and cuda.version.major | int > 8 or cuda.version.major + cuda.version.minor == "101" -%}
+{# disabled for ubi8 (except cuda 10.1) due to gcc version compatibility issues -#}
 @test "matrixMulDrv {
     cat <<EOF > Dockerfile
     FROM $image
     {% if cuda.os.distro == "ubuntu" -%}
     RUN apt-get update && apt-get install -y make g++ git
+    {% elif cuda.os.version | int == 8 -%}
+    RUN dnf install -y make gcc-c++ git
     {% else -%}
     RUN yum install -y make g++ git
     {% endif -%}
@@ -76,4 +84,5 @@ EOF
     docker_run --rm --runtime=nvidia ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
 }
+{% endif -%}
 {% endif -%}
