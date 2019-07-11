@@ -1,12 +1,11 @@
 ARG IMAGE_NAME
-FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-runtime-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.tag_suffix }}
+FROM ${IMAGE_NAME}:8.0-runtime-centos6
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 RUN yum install -y \
         cuda-nvml-dev-$CUDA_PKG_VERSION \
         cuda-command-line-tools-$CUDA_PKG_VERSION \
-{% if cuda.version.major | int == 8 -%}
-        cuda-core-$CUDA_PKG_VERSION \
+cuda-core-$CUDA_PKG_VERSION \
         cuda-misc-headers-$CUDA_PKG_VERSION \
         cuda-license-$CUDA_PKG_VERSION \
         cuda-nvrtc-dev-$CUDA_PKG_VERSION \
@@ -19,15 +18,7 @@ RUN yum install -y \
         cuda-npp-dev-$CUDA_PKG_VERSION \
         cuda-cudart-dev-$CUDA_PKG_VERSION \
         cuda-driver-dev-$CUDA_PKG_VERSION \
-{% else -%}
-        cuda-libraries-dev-$CUDA_PKG_VERSION \
-        cuda-minimal-build-$CUDA_PKG_VERSION \
-        {% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 -%}
-        cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}-{{ cuda.version.full }}.3-1 \
-        cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-{{ cuda.version.full }}.4-1 \
-        {% endif -%}
-{% endif -%}
-    && \
+&& \
     rm -rf /var/cache/yum/*
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs

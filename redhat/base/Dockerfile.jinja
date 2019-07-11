@@ -52,18 +52,22 @@ RUN yum install -y \
         cuda-curand-$CUDA_PKG_VERSION \
         cuda-cusparse-$CUDA_PKG_VERSION \
         cuda-npp-$CUDA_PKG_VERSION \
-        cuda-cudart-$CUDA_PKG_VERSION && \
+        cuda-cudart-$CUDA_PKG_VERSION \
 {% else -%}
         cuda-cudart-$CUDA_PKG_VERSION \
-        cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} && \
 {% endif -%}
+{% if cuda.version.major | int == 10 -%}
+        cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} \
+{% endif -%}
+        && \
     ln -s cuda-{{ cuda.version.major }}.{{ cuda.version.minor }} /usr/local/cuda && \
     rm -rf /var/cache/yum/*
 
 # nvidia-docker 1.0
-{% if cuda.version.major | int == 8 -%}
+{% if cuda.version.major | int == 8 or cuda.version.major | int == 9 -%}
 LABEL com.nvidia.volumes.needed="nvidia_driver"
 LABEL com.nvidia.cuda.version="${CUDA_VERSION}"
+
 {% endif -%}
 
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \

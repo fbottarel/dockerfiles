@@ -34,8 +34,7 @@ redhat6: &redhat6_definition
         version: "7.6.1.34"
         sha256sum: "af0791cba08468a4bf2a4ef15a787dac261f41219caaf335984d47d11eca19ba"
     v9.2:
-      build_version: 168
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
+      build_version: 148
       cudnn7:
         version: "7.6.1.34"
         sha256sum: "0d38735b06a1daf518c7ad4977fdb987a470f7793d95542ac9897e214ab1b006"
