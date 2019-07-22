@@ -7,7 +7,6 @@ envNVGPU="NVIDIA_VISIBLE_DEVICES"
 
 function setup() {
     check_runtime
-    docker pull $image >/dev/null 2>&1 || true
 }
 
 @test "no device " {

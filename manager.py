@@ -174,7 +174,7 @@ class ManagerTrigger(Manager):
 
     # returns true if changes have been detected
     def deep_compare(self):
-        rgx = re.compile(r"root\['(\w*).*\['v(\d+\.\d+)")
+        rgx = re.compile(r"root\['([\w\.\d]*)'\]\['cuda'\]\['v(\d+\.\d+)")
 
         # Uncomment this to see the files being compared in the logs
         #  log.debug("manifest previous: %s", self.manifest_previous)
@@ -187,6 +187,7 @@ class ManagerTrigger(Manager):
             exclude_paths=[
                 "root['redhat6']",
                 "root['redhat7']",
+                "root['redhat8']",
                 "root['docker_repos']",
             ],
         ).to_dict()
@@ -212,28 +213,28 @@ class ManagerTrigger(Manager):
                 ddiff["dictionary_item_removed"]
             ):
                 match = rgx.match(obj)
-                self.changed.add(
-                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
-                )
+                if match:
+                    item = match.group(1) + "_cuda" + match.group(2)
+                    self.changed.add(item.replace(".", "_"))
         elif items_added:
             for obj in items_added:
                 match = rgx.match(obj)
-                self.changed.add(
-                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
-                )
+                if match:
+                    item = match.group(1) + "_cuda" + match.group(2)
+                    self.changed.add(item.replace(".", "_"))
         elif items_removed:
             for obj in items_removed:
                 match = rgx.match(obj)
-                self.changed.add(
-                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
-                )
+                if match:
+                    item = match.group(1) + "_cuda" + match.group(2)
+                    self.changed.add(item.replace(".", "_"))
 
         if items_changed:
             for obj in items_changed:
                 match = rgx.match(obj)
-                self.changed.add(
-                    match.group(1) + "_cuda" + match.group(2).replace(".", "_")
-                )
+                if match:
+                    item = match.group(1) + "_cuda" + match.group(2)
+                    self.changed.add(item.replace(".", "_"))
 
         log.debug("manifest root changes: %s", self.changed)
         return True
@@ -241,6 +242,7 @@ class ManagerTrigger(Manager):
     def kickoff(self):
         url = os.getenv("CI_API_V4_URL")
         project_id = os.getenv("CI_PROJECT_ID")
+        dry_run = os.getenv("DRY_RUN")
         token = os.getenv("CI_JOB_TOKEN")
         ref = os.getenv("CI_COMMIT_REF_NAME")
         payload = {"token": token, "ref": ref, "variables[TRIGGER]": "true"}
@@ -252,6 +254,8 @@ class ManagerTrigger(Manager):
         else:
             for job in self.changed:
                 payload[f"variables[{job}]"] = "true"
+        if dry_run:
+            payload[f"variables[DRY_RUN]"] = "true"
         log.debug("payload %s", payload)
         if not self.dry_run:
             r = requests.post(
@@ -286,7 +290,6 @@ class ManagerDockerPush(Manager):
         "--os-version", str, help="The distro version", default=None, mandatory=True
     )
 
-    latest = cli.Flag("--push-latest", help="The distro version")
     dry_run = cli.Flag(["-n", "--dry-run"], help="Show output but don't do anything!")
 
     cuda_version = cli.SwitchAttr(
@@ -349,6 +352,9 @@ class ManagerDockerPush(Manager):
     #  10.0-devel-centos6-patched
     #
     def _tag_contains_suffix(self, img):
+        if len(img.tags) == 0:
+            log.debug("img has no tags!")
+            return False
         fields = img.tags[0].split(":")[1].split("-")
         is_cudnn = [s for s in fields if "cudnn" in s]
         if (is_cudnn and len(fields) > 4) or (not is_cudnn and len(fields) > 3):
@@ -363,15 +369,14 @@ class ManagerDockerPush(Manager):
         log.debug("tag does not contain suffix")
 
     def _should_push_image(self, img):
+        if len(img.tags) == 0:
+            log.debug("img has no tags!")
+            return False
         # Ensure the tag contains the target cuda version and distro version
         match = all(
             key in str(img.tags)
             for key in [self.cuda_version, f"{self.distro}{self.distro_version}"]
         )
-        # Override match if tag is latest and we are pushing latest
-        if self.latest and "latest" in img.tags or self.tag_suffix in img.tags:
-            log.debug("tag is latest and we are pushing latest")
-            match = True
         # If the tag has a suffix but we are not expecting one, then fail
         if not self.tag_suffix and self._tag_contains_suffix(img):
             log.debug("Tag suffix detected in image tag")
@@ -397,26 +402,34 @@ class ManagerDockerPush(Manager):
                 continue
             log.info("Processing image: %s, id: %s", img.tags, img.short_id)
             for repo in self.repos:
-                tag = img.tags[0].split(":")[1]
-                new_repo = "{}/{}".format(repo, img.tags[0].split(":")[0])
-                if self.dry_run:
+                for k, v in [[x, y] for tag in img.tags for (x, y) in [tag.split(":")]]:
+                    print(k, v)
+                    tag = v
+                    new_repo = "{}/{}".format(repo, k)
+                    if repo == "docker.io":
+                        new_repo = k
+                    if self.dry_run:
+                        log.info(
+                            "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, False
+                        )
+                        log.info("Would have pushed: %s:%s", new_repo, tag)
+                        continue
+                    tagged = img.tag(new_repo, tag)
                     log.info(
-                        "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, False
+                        "Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, tagged
                     )
-                    log.info("Would have pushed: %s:%s", new_repo, tag)
-                    continue
-                tagged = img.tag(new_repo, tag)
-                log.info("Tagged %s:%s (%s), %s", new_repo, tag, img.short_id, tagged)
-                if tagged:
-                    # FIXME: only push if the image has changed
-                    for line in self.client.images.push(
-                        new_repo, tag, stream=True, decode=True
-                    ):
-                        log.info(line)
+                    if tagged:
+                        # FIXME: only push if the image has changed
+                        for line in self.client.images.push(
+                            new_repo, tag, stream=True, decode=True
+                        ):
+                            log.info(line)
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
-        self.client = docker.DockerClient(base_url="unix://var/run/docker.sock")
+        self.client = docker.DockerClient(
+            base_url="unix://var/run/docker.sock", timeout=600
+        )
         self.docker_login()
         self.push_images()
         log.info("Done")
@@ -429,12 +442,16 @@ class ManagerGenerate(Manager):
     cuda = {}
     output_path = {}
 
-    distro = cli.SwitchAttr(
-        "--os", str, help="The distro to use.", default=None, mandatory=True
+    generate_all = cli.Flag(
+        ["all"],
+        excludes=["--os", "--os-version", "--cuda-version", "--tag-suffix"],
+        help="Generate all of the templates.",
     )
 
+    distro = cli.SwitchAttr("--os", str, help="The distro to use.", default=None)
+
     distro_version = cli.SwitchAttr(
-        "--os-version", str, help="The distro version", default=None, mandatory=True
+        "--os-version", str, help="The distro version", default=None
     )
 
     cuda_version = cli.SwitchAttr(
@@ -442,7 +459,6 @@ class ManagerGenerate(Manager):
         str,
         help="The cuda version to use. Example: '10.1'",
         default=None,
-        mandatory=True,
     )
 
     tag_suffix = cli.SwitchAttr(
@@ -655,7 +671,18 @@ class ManagerGenerate(Manager):
                 continue
             self.write_test(filename, f"{self.output_path}/test")
 
-    def main(self):
+    def target_all(self):
+        log.debug("Generating all docker scripts!")
+        rgx = re.compile(r"^([a-zA-Z]*)([\d\.]*)-v([\d\.]*)")
+        for k, _ in self.parent.ci.items():
+            match = rgx.match(k)
+            if match:
+                self.distro = match.group(1)
+                self.distro_version = match.group(2)
+                self.cuda_version = match.group(3)
+                self.targeted()
+
+    def targeted(self):
         log.debug("Have distro: %s version: %s", self.distro, self.distro_version)
         target = f"{self.distro}{self.distro_version}"
         self.output_path = pathlib.Path(f"dist/{target}/{self.cuda_version}")
@@ -670,6 +697,12 @@ class ManagerGenerate(Manager):
         else:
             self.generate_dockerscripts()
         self.generate_testscripts()
+
+    def main(self):
+        if self.generate_all:
+            self.target_all()
+        else:
+            self.targeted()
         log.info("Done")
 
 

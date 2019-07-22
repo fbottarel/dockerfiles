@@ -33,6 +33,16 @@ Pipelines can be triggered automatically or explicitly via commit message.
 
 The pipeline mechanism used for this project within gitlab is a workround [until multiple pipelines per gitlab-ci.yaml file is implemented in gitlab.](https://gitlab.com/gitlab-org/gitlab-ce/issues/22972)
 
+### dry-run
+
+To run the pipeline without publishing to the registries indicated in `manifest.yml`:
+
+1. Go to the [pipelines](https://gitlab.com/nvidia/cuda/pipelines) page and click "Run Pipeline".
+
+1. Input variable should be "DRY_RUN"; set it to "1" or whatever. It just needs to be set.
+
+1. Click "Run Pipeline"
+
 ### Automatic triggering
 
 By default on the master branch, the manifest.yaml file is compared against the previous version from the last commit. The changed keys within the manifest are then used to trigger builds via the gitlab api.

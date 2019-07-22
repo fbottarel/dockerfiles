@@ -48,49 +48,51 @@ stages:
   stage: cuda
   <<: *tags_definition
   script:
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "dist/${OS}/${CUDA_VERSION}/runtime"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}"
+    - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
+        TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime ";
+        TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel ";
+      fi
+    - if [[ "${LATEST}" == "true" ]]; then
+        TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
+      fi
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} ${TAG_LATEST}
+                   "dist/${OS}/${CUDA_VERSION}/runtime"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/devel"
-    - if [[ "${NO_OS_SUFFIX}" == true ]]; then
-          docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
-          docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
-      fi
-    - if [[ "${LATEST}" == true ]]; then
-          docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" "${IMAGE_NAME}:latest";
-      fi
 
 .cuda_base_template: &cuda_base_definition
   stage: cuda
   <<: *tags_definition
   script:
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "dist/${OS}/${CUDA_VERSION}/base"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
+    - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
+        TAG_BASE=" -t ${IMAGE_NAME}:${CUDA_VERSION}-base ";
+        TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime ";
+        TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel ";
+      fi
+    - if [[ "${LATEST}" == "true" ]]; then
+        TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
+      fi
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE}
+                   "dist/${OS}/${CUDA_VERSION}/base"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/runtime"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/devel"
-    - if [[ "${NO_OS_SUFFIX}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-base";
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-runtime";
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-devel";
-      fi
-    - if [[ "${LATEST}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:latest";
-      fi
 
 .cudnn_template: &cudnn_definition
   stage: cudnn
   <<: *tags_definition
   script:
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}"
+    - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
+        TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime ";
+        TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel ";
+      fi
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
                    "dist/${OS}/${CUDA_VERSION}/runtime/${CUDNN_VERSION}"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
+    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}"
                    "dist/${OS}/${CUDA_VERSION}/devel/${CUDNN_VERSION}"
-    - if [[ "${NO_OS_SUFFIX}" == true ]]; then
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime";
-        docker tag "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel";
-      fi
 
 .test_template: &test_definition
   stage: test
@@ -108,9 +110,10 @@ stages:
         --os "${OS_NAME}"
         --os-version "${OS_VERSION}"
         --cuda-version "${CUDA_VERSION}"
-        --tag-suffix "${IMAGE_TAG_SUFFIX}" ${LATEST:+"--push-latest"} -n
+        ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${DRY_RUN:+"-n"}
 
 trigger:
+  <<: *tags_definition
   script:
     - echo CI_COMMIT_MESSAGE:$CI_COMMIT_MESSAGE
     - python manager.py trigger
@@ -140,11 +143,16 @@ centos6-v10.1-deploy:
   <<: *deploy_definition
   <<: *centos6_cuda10_1_only
 
+# Internal testing only
 .centos6_cuda10_1_only_patched_glibc: &centos6_cuda10_1_only_patched_glibc
   only:
     variables:
-      - $centos6_cuda10_1 == "true"
+      - $centos6_cuda10_1_only_patched_glibc == "true"
       - $all == "true"
+  # Do not run in production
+  except:
+    variables:
+      - $REGISTRY_TOKEN
 
 centos6-v10.1-patched-glibc:
   <<: *cuda_base_definition
@@ -184,11 +192,16 @@ centos6-v10.0-deploy:
   <<: *deploy_definition
   <<: *centos6_cuda10_0_only
 
+# Internal testing only
 .centos6_cuda10_0_only_patched_glibc: &centos6_cuda10_0_only_patched_glibc
   only:
     variables:
-      - $centos6_cuda10_0_patched_glibc == "true"
+      - $centos6_cuda10_0_only_patched_glibc == "true"
       - $all == "true"
+  # Do not run in production
+  except:
+    variables:
+      - $REGISTRY_TOKEN
 
 centos6-v10.0-patched-glibc:
   <<: *cuda_base_definition
@@ -287,15 +300,10 @@ centos6-v8.0-deploy:
       - $all == "true"
 
 centos7-v10.1:
-  variables:
-    LATEST: "true"
-    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *centos7_cuda10_1_only
 
 centos7-v10.1-cudnn7:
-  variables:
-    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *centos7_cuda10_1_only
 
@@ -304,8 +312,6 @@ centos7-v10.1-test:
   <<: *centos7_cuda10_1_only
 
 centos7-v10.1-deploy:
-  variables:
-    LATEST: "true"
   <<: *deploy_definition
   <<: *centos7_cuda10_1_only
 
@@ -427,285 +433,285 @@ centos7-v8.0-deploy:
   <<: *deploy_definition
   <<: *centos7_cuda8_0_only
 
-.ubi7_cuda10_1_only: &ubi7_cuda10_1_only
-  only:
-    variables:
-      - $ubi7_cuda10_1 == "true"
-      - $all == "true"
+# .ubi7_cuda10_1_only: &ubi7_cuda10_1_only
+  # only:
+    # variables:
+      # - $ubi7_cuda10_1 == "true"
+      # - $all == "true"
 
-ubi7-v10.1:
-  <<: *cuda_base_definition
-  <<: *ubi7_cuda10_1_only
+# ubi7-v10.1:
+  # <<: *cuda_base_definition
+  # <<: *ubi7_cuda10_1_only
 
-ubi7-v10.1-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda10_1_only
+# ubi7-v10.1-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda10_1_only
 
-ubi7-v10.1-test:
-  <<: *test_definition
-  <<: *ubi7_cuda10_1_only
+# ubi7-v10.1-test:
+  # <<: *test_definition
+  # <<: *ubi7_cuda10_1_only
 
-ubi7-v10.1-deploy:
-  <<: *deploy_definition
-  <<: *ubi7_cuda10_1_only
+# ubi7-v10.1-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi7_cuda10_1_only
 
-.ubi7_cuda10_0_only: &ubi7_cuda10_0_only
-  only:
-    variables:
-      - $ubi7_cuda10_0 == "true"
-      - $all == "true"
+# .ubi7_cuda10_0_only: &ubi7_cuda10_0_only
+  # only:
+    # variables:
+      # - $ubi7_cuda10_0 == "true"
+      # - $all == "true"
 
-ubi7-v10.0:
-  <<: *cuda_base_definition
-  <<: *ubi7_cuda10_0_only
+# ubi7-v10.0:
+  # <<: *cuda_base_definition
+  # <<: *ubi7_cuda10_0_only
 
-ubi7-v10.0-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda10_0_only
+# ubi7-v10.0-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda10_0_only
 
-ubi7-v10.0-test:
-  <<: *test_definition
-  <<: *ubi7_cuda10_0_only
+# ubi7-v10.0-test:
+  # <<: *test_definition
+  # <<: *ubi7_cuda10_0_only
 
-ubi7-v10.0-deploy:
-  <<: *deploy_definition
-  <<: *ubi7_cuda10_0_only
+# ubi7-v10.0-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi7_cuda10_0_only
 
-.ubi7_cuda9_2_only: &ubi7_cuda9_2_only
-  only:
-    variables:
-      - $ubi7_cuda9_2 == "true"
-      - $all == "true"
+# .ubi7_cuda9_2_only: &ubi7_cuda9_2_only
+  # only:
+    # variables:
+      # - $ubi7_cuda9_2 == "true"
+      # - $all == "true"
 
-ubi7-v9.2:
-  <<: *cuda_base_definition
-  <<: *ubi7_cuda9_2_only
+# ubi7-v9.2:
+  # <<: *cuda_base_definition
+  # <<: *ubi7_cuda9_2_only
 
-ubi7-v9.2-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda9_2_only
+# ubi7-v9.2-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda9_2_only
 
-ubi7-v9.2-test:
-  <<: *test_definition
-  <<: *ubi7_cuda9_2_only
+# ubi7-v9.2-test:
+  # <<: *test_definition
+  # <<: *ubi7_cuda9_2_only
 
-ubi7-v9.2-deploy:
-  <<: *deploy_definition
-  <<: *ubi7_cuda9_2_only
+# ubi7-v9.2-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi7_cuda9_2_only
 
-.ubi7_cuda9_1_only: &ubi7_cuda9_1_only
-  only:
-    variables:
-      - $ubi7_cuda9_1 == "true"
-      - $all == "true"
+# .ubi7_cuda9_1_only: &ubi7_cuda9_1_only
+  # only:
+    # variables:
+      # - $ubi7_cuda9_1 == "true"
+      # - $all == "true"
 
-ubi7-v9.1:
-  <<: *cuda_base_definition
-  <<: *ubi7_cuda9_1_only
+# ubi7-v9.1:
+  # <<: *cuda_base_definition
+  # <<: *ubi7_cuda9_1_only
 
-ubi7-v9.1-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda9_1_only
+# ubi7-v9.1-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda9_1_only
 
-ubi7-v9.1-test:
-  <<: *test_definition
-  <<: *ubi7_cuda9_1_only
+# ubi7-v9.1-test:
+  # <<: *test_definition
+  # <<: *ubi7_cuda9_1_only
 
-ubi7-v9.1-deploy:
-  <<: *deploy_definition
-  <<: *ubi7_cuda9_1_only
+# ubi7-v9.1-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi7_cuda9_1_only
 
-.ubi7_cuda9_0_only: &ubi7_cuda9_0_only
-  only:
-    variables:
-      - $ubi7_cuda9_0 == "true"
-      - $all == "true"
+# .ubi7_cuda9_0_only: &ubi7_cuda9_0_only
+  # only:
+    # variables:
+      # - $ubi7_cuda9_0 == "true"
+      # - $all == "true"
 
-ubi7-v9.0:
-  <<: *cuda_base_definition
-  <<: *ubi7_cuda9_0_only
+# ubi7-v9.0:
+  # <<: *cuda_base_definition
+  # <<: *ubi7_cuda9_0_only
 
-ubi7-v9.0-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda9_0_only
+# ubi7-v9.0-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda9_0_only
 
-ubi7-v9.0-test:
-  <<: *test_definition
-  <<: *ubi7_cuda9_0_only
+# ubi7-v9.0-test:
+  # <<: *test_definition
+  # <<: *ubi7_cuda9_0_only
 
-ubi7-v9.0-deploy:
-  <<: *deploy_definition
-  <<: *ubi7_cuda9_0_only
+# ubi7-v9.0-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi7_cuda9_0_only
 
-.ubi7_cuda8_0_only: &ubi7_cuda8_0_only
-  only:
-    variables:
-      - $ubi7_cuda8_0 == "true"
-      - $all == "true"
+# .ubi7_cuda8_0_only: &ubi7_cuda8_0_only
+  # only:
+    # variables:
+      # - $ubi7_cuda8_0 == "true"
+      # - $all == "true"
 
-ubi7-v8.0:
-  <<: *cuda_definition_deprecated
-  <<: *ubi7_cuda8_0_only
+# ubi7-v8.0:
+  # <<: *cuda_definition_deprecated
+  # <<: *ubi7_cuda8_0_only
 
-ubi7-v8.0-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda8_0_only
+# ubi7-v8.0-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda8_0_only
 
-ubi7-v8.0-cudnn6:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda8_0_only
+# ubi7-v8.0-cudnn6:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda8_0_only
 
-ubi7-v8.0-cudnn5:
-  <<: *cudnn_definition
-  <<: *ubi7_cuda8_0_only
+# ubi7-v8.0-cudnn5:
+  # <<: *cudnn_definition
+  # <<: *ubi7_cuda8_0_only
 
-ubi7-v8.0-test:
-  <<: *test_definition
-  <<: *ubi7_cuda8_0_only
+# ubi7-v8.0-test:
+  # <<: *test_definition
+  # <<: *ubi7_cuda8_0_only
 
-ubi7-v8.0-deploy:
-  <<: *deploy_definition
-  <<: *ubi7_cuda8_0_only
+# ubi7-v8.0-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi7_cuda8_0_only
 
-.ubi8_cuda10_1_only: &ubi8_cuda10_1_only
-  only:
-    variables:
-      - $ubi8_cuda10_1 == "true"
-      - $all == "true"
+# .ubi8_cuda10_1_only: &ubi8_cuda10_1_only
+  # only:
+    # variables:
+      # - $ubi8_cuda10_1 == "true"
+      # - $all == "true"
 
-ubi8-v10.1:
-  <<: *cuda_base_definition
-  <<: *ubi8_cuda10_1_only
+# ubi8-v10.1:
+  # <<: *cuda_base_definition
+  # <<: *ubi8_cuda10_1_only
 
-ubi8-v10.1-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda10_1_only
+# ubi8-v10.1-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda10_1_only
 
-ubi8-v10.1-test:
-  <<: *test_definition
-  <<: *ubi8_cuda10_1_only
+# ubi8-v10.1-test:
+  # <<: *test_definition
+  # <<: *ubi8_cuda10_1_only
 
-ubi8-v10.1-deploy:
-  <<: *deploy_definition
-  <<: *ubi8_cuda10_1_only
+# ubi8-v10.1-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi8_cuda10_1_only
 
-.ubi8_cuda10_0_only: &ubi8_cuda10_0_only
-  only:
-    variables:
-      - $ubi8_cuda10_0 == "true"
-      - $all == "true"
+# .ubi8_cuda10_0_only: &ubi8_cuda10_0_only
+  # only:
+    # variables:
+      # - $ubi8_cuda10_0 == "true"
+      # - $all == "true"
 
-ubi8-v10.0:
-  <<: *cuda_base_definition
-  <<: *ubi8_cuda10_0_only
+# ubi8-v10.0:
+  # <<: *cuda_base_definition
+  # <<: *ubi8_cuda10_0_only
 
-ubi8-v10.0-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda10_0_only
+# ubi8-v10.0-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda10_0_only
 
-ubi8-v10.0-test:
-  <<: *test_definition
-  <<: *ubi8_cuda10_0_only
+# ubi8-v10.0-test:
+  # <<: *test_definition
+  # <<: *ubi8_cuda10_0_only
 
-ubi8-v10.0-deploy:
-  <<: *deploy_definition
-  <<: *ubi8_cuda10_0_only
+# ubi8-v10.0-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi8_cuda10_0_only
 
-.ubi8_cuda9_2_only: &ubi8_cuda9_2_only
-  only:
-    variables:
-      - $ubi8_cuda9_2 == "true"
-      - $all == "true"
+# .ubi8_cuda9_2_only: &ubi8_cuda9_2_only
+  # only:
+    # variables:
+      # - $ubi8_cuda9_2 == "true"
+      # - $all == "true"
 
-ubi8-v9.2:
-  <<: *cuda_base_definition
-  <<: *ubi8_cuda9_2_only
+# ubi8-v9.2:
+  # <<: *cuda_base_definition
+  # <<: *ubi8_cuda9_2_only
 
-ubi8-v9.2-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda9_2_only
+# ubi8-v9.2-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda9_2_only
 
-ubi8-v9.2-test:
-  <<: *test_definition
-  <<: *ubi8_cuda9_2_only
+# ubi8-v9.2-test:
+  # <<: *test_definition
+  # <<: *ubi8_cuda9_2_only
 
-ubi8-v9.2-deploy:
-  <<: *deploy_definition
-  <<: *ubi8_cuda9_2_only
+# ubi8-v9.2-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi8_cuda9_2_only
 
-.ubi8_cuda9_1_only: &ubi8_cuda9_1_only
-  only:
-    variables:
-      - $ubi8_cuda9_1 == "true"
-      - $all == "true"
+# .ubi8_cuda9_1_only: &ubi8_cuda9_1_only
+  # only:
+    # variables:
+      # - $ubi8_cuda9_1 == "true"
+      # - $all == "true"
 
-ubi8-v9.1:
-  <<: *cuda_base_definition
-  <<: *ubi8_cuda9_1_only
+# ubi8-v9.1:
+  # <<: *cuda_base_definition
+  # <<: *ubi8_cuda9_1_only
 
-ubi8-v9.1-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda9_1_only
+# ubi8-v9.1-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda9_1_only
 
-ubi8-v9.1-test:
-  <<: *test_definition
-  <<: *ubi8_cuda9_1_only
+# ubi8-v9.1-test:
+  # <<: *test_definition
+  # <<: *ubi8_cuda9_1_only
 
-ubi8-v9.1-deploy:
-  <<: *deploy_definition
-  <<: *ubi8_cuda9_1_only
+# ubi8-v9.1-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi8_cuda9_1_only
 
-.ubi8_cuda9_0_only: &ubi8_cuda9_0_only
-  only:
-    variables:
-      - $ubi8_cuda9_0 == "true"
-      - $all == "true"
+# .ubi8_cuda9_0_only: &ubi8_cuda9_0_only
+  # only:
+    # variables:
+      # - $ubi8_cuda9_0 == "true"
+      # - $all == "true"
 
-ubi8-v9.0:
-  <<: *cuda_base_definition
-  <<: *ubi8_cuda9_0_only
+# ubi8-v9.0:
+  # <<: *cuda_base_definition
+  # <<: *ubi8_cuda9_0_only
 
-ubi8-v9.0-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda9_0_only
+# ubi8-v9.0-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda9_0_only
 
-ubi8-v9.0-test:
-  <<: *test_definition
-  <<: *ubi8_cuda9_0_only
+# ubi8-v9.0-test:
+  # <<: *test_definition
+  # <<: *ubi8_cuda9_0_only
 
-ubi8-v9.0-deploy:
-  <<: *deploy_definition
-  <<: *ubi8_cuda9_0_only
+# ubi8-v9.0-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi8_cuda9_0_only
 
-.ubi8_cuda8_0_only: &ubi8_cuda8_0_only
-  only:
-    variables:
-      - $ubi8_cuda8_0 == "true"
-      - $all == "true"
+# .ubi8_cuda8_0_only: &ubi8_cuda8_0_only
+  # only:
+    # variables:
+      # - $ubi8_cuda8_0 == "true"
+      # - $all == "true"
 
-ubi8-v8.0:
-  <<: *cuda_definition_deprecated
-  <<: *ubi8_cuda8_0_only
+# ubi8-v8.0:
+  # <<: *cuda_definition_deprecated
+  # <<: *ubi8_cuda8_0_only
 
-ubi8-v8.0-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda8_0_only
+# ubi8-v8.0-cudnn7:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda8_0_only
 
-ubi8-v8.0-cudnn6:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda8_0_only
+# ubi8-v8.0-cudnn6:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda8_0_only
 
-ubi8-v8.0-cudnn5:
-  <<: *cudnn_definition
-  <<: *ubi8_cuda8_0_only
+# ubi8-v8.0-cudnn5:
+  # <<: *cudnn_definition
+  # <<: *ubi8_cuda8_0_only
 
-ubi8-v8.0-test:
-  <<: *test_definition
-  <<: *ubi8_cuda8_0_only
+# ubi8-v8.0-test:
+  # <<: *test_definition
+  # <<: *ubi8_cuda8_0_only
 
-ubi8-v8.0-deploy:
-  <<: *deploy_definition
-  <<: *ubi8_cuda8_0_only
+# ubi8-v8.0-deploy:
+  # <<: *deploy_definition
+  # <<: *ubi8_cuda8_0_only
 
 .ubuntu18_04_cuda10_1_only: &ubuntu18_04_cuda10_1_only
   only:
@@ -714,10 +720,15 @@ ubi8-v8.0-deploy:
       - $all == "true"
 
 ubuntu18.04-v10.1:
+  variables:
+    LATEST: "true"
+    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *ubuntu18_04_cuda10_1_only
 
 ubuntu18.04-v10.1-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu18_04_cuda10_1_only
 
@@ -736,10 +747,14 @@ ubuntu18.04-v10.1-deploy:
       - $all == "true"
 
 ubuntu18.04-v10.0:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *ubuntu18_04_cuda10_0_only
 
 ubuntu18.04-v10.0-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu18_04_cuda10_0_only
 
@@ -780,15 +795,10 @@ ubuntu18.04-v9.2-deploy:
       - $all == "true"
 
 ubuntu16.04-v10.1:
-  variables:
-    LATEST: "true"
-    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *ubuntu16_04_cuda10_1_only
 
 ubuntu16.04-v10.1-cudnn7:
-  variables:
-    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu16_04_cuda10_1_only
 
@@ -797,8 +807,6 @@ ubuntu16.04-v10.1-test:
   <<: *ubuntu16_04_cuda10_1_only
 
 ubuntu16.04-v10.1-deploy:
-  variables:
-    LATEST: "true"
   <<: *deploy_definition
   <<: *ubuntu16_04_cuda10_1_only
 
@@ -831,10 +839,14 @@ ubuntu16.04-v10.0-deploy:
       - $all == "true"
 
 ubuntu16.04-v9.2:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *ubuntu16_04_cuda9_2_only
 
 ubuntu16.04-v9.2-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu16_04_cuda9_2_only
 
@@ -853,10 +865,14 @@ ubuntu16.04-v9.2-deploy:
       - $all == "true"
 
 ubuntu16.04-v9.1:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *ubuntu16_04_cuda9_1_only
 
 ubuntu16.04-v9.1-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu16_04_cuda9_1_only
 
@@ -875,10 +891,14 @@ ubuntu16.04-v9.1-deploy:
       - $all == "true"
 
 ubuntu16.04-v9.0:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *ubuntu16_04_cuda9_0_only
 
 ubuntu16.04-v9.0-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu16_04_cuda9_0_only
 
@@ -897,18 +917,26 @@ ubuntu16.04-v9.0-deploy:
       - $all == "true"
 
 ubuntu16.04-v8.0:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cuda_definition_deprecated
   <<: *ubuntu16_04_cuda8_0_only
 
 ubuntu16.04-v8.0-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu16_04_cuda8_0_only
 
 ubuntu16.04-v8.0-cudnn6:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu16_04_cuda8_0_only
 
 ubuntu16.04-v8.0-cudnn5:
+  variables:
+    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu16_04_cuda8_0_only
 
@@ -927,15 +955,10 @@ ubuntu16.04-v8.0-deploy:
       - $all == "true"
 
 ubuntu14.04-v10.1:
-  variables:
-    LATEST: "true"
-    NO_OS_SUFFIX: "true"
   <<: *cuda_base_definition
   <<: *ubuntu14_04_cuda10_1_only
 
 ubuntu14.04-v10.1-cudnn7:
-  variables:
-    NO_OS_SUFFIX: "true"
   <<: *cudnn_definition
   <<: *ubuntu14_04_cuda10_1_only
 
@@ -944,8 +967,6 @@ ubuntu14.04-v10.1-test:
   <<: *ubuntu14_04_cuda10_1_only
 
 ubuntu14.04-v10.1-deploy:
-  variables:
-    LATEST: "true"
   <<: *deploy_definition
   <<: *ubuntu14_04_cuda10_1_only
 

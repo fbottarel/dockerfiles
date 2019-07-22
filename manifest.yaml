@@ -6,11 +6,11 @@ docker_repos:
     pass: REGISTRY_TOKEN
     user: REGISTRY_USER
     registry: docker.io
-  nvcr.io:
-    only_if: NVCR_TOKEN
-    pass: NVCR_TOKEN
-    user: $oauthtoken
-    registry: nvcr.io/nvidian
+  # nvcr.io:
+    # only_if: NVCR_TOKEN
+    # pass: NVCR_TOKEN
+    # user: $oauthtoken
+    # registry: nvcr.io/nvidian
   gitlab-internal:
     only_if: NV_CI_INTERNAL
     user: "gitlab-ci-token"
@@ -25,19 +25,19 @@ redhat6: &redhat6_definition
       build_version: 168
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "9885e38e71fa9844b3e4fb7c7211af41b24c9f76a9014f9d5e1768ddff2087dc"
+        version: "7.6.2.24"
+        sha256sum: "afbfd6a61e774beb3851742452c007de4f65f8ec0592d583bc6806f8d386cd1f"
     v10.0:
       build_version: 130
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "af0791cba08468a4bf2a4ef15a787dac261f41219caaf335984d47d11eca19ba"
+        version: "7.6.2.24"
+        sha256sum: "86d87c426537a55dbdbe416b92f8afa1e49361a759c3d17f119e431767a88432"
     v9.2:
       build_version: 148
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "0d38735b06a1daf518c7ad4977fdb987a470f7793d95542ac9897e214ab1b006"
+        version: "7.6.2.24"
+        sha256sum: "9a015dbda1caa904433c71c89f7d61559c9fa5667ad53663c529efae49966e46"
     v9.1:
       build_version: 85
       cudnn7:
@@ -46,8 +46,8 @@ redhat6: &redhat6_definition
     v9.0:
       build_version: 176
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "57a921b20be1d3d1192e59ecfdee61c55e06e530a6d414a013083fa81a77f1c5"
+        version: "7.6.2.24"
+        sha256sum: "787adab5287597bf9a6462be4bcd55904593690315a889884d8ccfa8aaa9e370"
     v8.0:
       build_version: 61
       cudnn7:
@@ -68,19 +68,19 @@ redhat7: &redhat7_definition
       build_version: 168
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "9885e38e71fa9844b3e4fb7c7211af41b24c9f76a9014f9d5e1768ddff2087dc"
+        version: "7.6.2.24"
+        sha256sum: "afbfd6a61e774beb3851742452c007de4f65f8ec0592d583bc6806f8d386cd1f"
     v10.0:
       build_version: 130
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "af0791cba08468a4bf2a4ef15a787dac261f41219caaf335984d47d11eca19ba"
+        version: "7.6.2.24"
+        sha256sum: "86d87c426537a55dbdbe416b92f8afa1e49361a759c3d17f119e431767a88432"
     v9.2:
       build_version: 148
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "0d38735b06a1daf518c7ad4977fdb987a470f7793d95542ac9897e214ab1b006"
+        version: "7.6.2.24"
+        sha256sum: "9a015dbda1caa904433c71c89f7d61559c9fa5667ad53663c529efae49966e46"
     v9.1:
       build_version: 85
       cudnn7:
@@ -89,8 +89,8 @@ redhat7: &redhat7_definition
     v9.0:
       build_version: 176
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "57a921b20be1d3d1192e59ecfdee61c55e06e530a6d414a013083fa81a77f1c5"
+        version: "7.6.2.24"
+        sha256sum: "787adab5287597bf9a6462be4bcd55904593690315a889884d8ccfa8aaa9e370"
     v8.0:
       build_version: 61
       cudnn7:
@@ -112,19 +112,19 @@ redhat8: &redhat8_definition
       build_version: 168
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "9885e38e71fa9844b3e4fb7c7211af41b24c9f76a9014f9d5e1768ddff2087dc"
+        version: "7.6.2.24"
+        sha256sum: "afbfd6a61e774beb3851742452c007de4f65f8ec0592d583bc6806f8d386cd1f"
     v10.0:
       build_version: 130
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "af0791cba08468a4bf2a4ef15a787dac261f41219caaf335984d47d11eca19ba"
+        version: "7.6.2.24"
+        sha256sum: "86d87c426537a55dbdbe416b92f8afa1e49361a759c3d17f119e431767a88432"
     v9.2:
       build_version: 148
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "0d38735b06a1daf518c7ad4977fdb987a470f7793d95542ac9897e214ab1b006"
+        version: "7.6.2.24"
+        sha256sum: "9a015dbda1caa904433c71c89f7d61559c9fa5667ad53663c529efae49966e46"
     v9.1:
       build_version: 85
       cudnn7:
@@ -133,8 +133,8 @@ redhat8: &redhat8_definition
     v9.0:
       build_version: 176
       cudnn7:
-        version: "7.6.1.34"
-        sha256sum: "57a921b20be1d3d1192e59ecfdee61c55e06e530a6d414a013083fa81a77f1c5"
+        version: "7.6.2.24"
+        sha256sum: "787adab5287597bf9a6462be4bcd55904593690315a889884d8ccfa8aaa9e370"
     v8.0:
       build_version: 61
       cudnn7:
@@ -157,10 +157,16 @@ centos7:
 
 ubi7:
   base_image: registry.access.redhat.com/ubi7/ubi:latest
+  exclude_repos:
+    - docker.io
+    - nvcr.io
   <<: *redhat7_definition
 
 ubi8:
   base_image: registry.access.redhat.com/ubi8/ubi:latest
+  exclude_repos:
+    - docker.io
+    - nvcr.io
   <<: *redhat8_definition
 
 ubuntu18.04:
@@ -172,18 +178,18 @@ ubuntu18.04:
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
       nccl_version: 2.4.7
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v10.0:
       build_version: 130
       nccl_version: 2.4.7
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v9.2:
       build_version: 148
       nccl_version: 2.4.2
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
 
 ubuntu16.04:
   template_path: ubuntu
@@ -194,18 +200,18 @@ ubuntu16.04:
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
       nccl_version: 2.4.7
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v10.0:
       build_version: 130
       nccl_version: 2.4.7
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v9.2:
       build_version: 148
       nccl_version: 2.4.7
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v9.1:
       build_version: 85
       nccl_version: 2.2.12
@@ -215,7 +221,7 @@ ubuntu16.04:
       build_version: 176
       nccl_version: 2.4.7
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v8.0:
       build_version: 61
       nccl_version: 2.4.2
@@ -235,13 +241,13 @@ ubuntu14.04:
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
       nccl_version: 2.4.7
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v10.0:
       build_version: 130
       nccl_version: 2.4.7
       requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
       cudnn7:
-        version: "7.6.1.34"
+        version: "7.6.2.24"
     v8.0:
       build_version: 61
       nccl_version: 2.4.2
