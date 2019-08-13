@@ -8,6 +8,25 @@ Container images are available from:
 
 - https://hub.docker.com/r/nvidia/cuda
 
+## Building from source
+
+The container image scripts are archived in the `dist/` directory and are available for all
+supported distros and cuda versions.
+
+Here is an example on how to build an image set for ubuntu16.04 and CUDA 9.0,
+
+```bash
+#/bin/bash
+
+export IMAGE_NAME="nvidia/cuda"
+export CUDA_VERSION="9.0"
+export OS="ubuntu16.04"
+
+docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "dist/${OS}/${CUDA_VERSION}/base"
+docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/runtime"
+docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/devel"
+```
+
 ## manager.py
 
 The python script is used to generate container sources and tests from templates.
