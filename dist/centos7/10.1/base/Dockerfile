@@ -7,7 +7,7 @@ curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
 
 COPY cuda.repo /etc/yum.repos.d/cuda.repo
 
-ENV CUDA_VERSION 10.1.168
+ENV CUDA_VERSION 10.1.243
 
 ENV CUDA_PKG_VERSION 10-1-$CUDA_VERSION-1
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
