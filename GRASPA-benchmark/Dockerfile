@@ -64,9 +64,25 @@ RUN cd simox/build && \
     make install
 RUN rm -Rf simox
 
+# Clone the GRASPA benchmark repository
+RUN git clone https://github.com/robotology/GRASPA-benchmark
+RUN mkdir GRASPA-benchmark/build && cd GRASPA-benchmark/build && \
+    cmake .. && make
+
+# Install the Python packages
+RUN pip3 install -r GRASPA-benchmark/requirements.txt
+
 # Set up .bashrc
 RUN echo "alias python='/usr/bin/python3.6'" >> ~/.bashrc
 RUN echo "PS1='\[\e]0;\u \w\a\]\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\] \$ '" >> ~/.bashrc
+
+# Add the gitpod user
+RUN useradd -l -u 33333 -G sudo -md /home/gitpod -s /bin/bash -p gitpod gitpod && \
+    # passwordless sudo for users in the 'sudo' group
+    sed -i.bkp -e 's/%sudo\s\+ALL=(ALL\(:ALL\)\?)\s\+ALL/%sudo ALL=NOPASSWD:ALL/g' /etc/sudoers
+
+# Copy the bashrc into the gitpod user directory
+RUN cp ~/.bashrc /home/gitpod
 
 # Set environmental variables
 ENV DISPLAY=:1
@@ -84,12 +100,3 @@ EXPOSE 6080
 # Launch bash from /workspace
 WORKDIR /workspace
 CMD ["bash"]
-
-# Clone the GRASPA benchmark repository
-RUN git clone https://github.com/robotology/GRASPA-benchmark
-RUN mkdir GRASPA-benchmark/build && cd GRASPA-benchmark/build
-RUN cmake .. \
-    make
-
-# Install the Python packages
-RUN pip3 install -r ../requirements.txt
