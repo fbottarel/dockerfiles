@@ -77,7 +77,7 @@ ci.trigger = <pipeline>[,...]
 Where pipeline can be:
 
 - `all`: All of the pipelines are built.
-- `<distro><distro_version>_cuda<major>_<minor>`: A specific cuda version for a specific cuda version.
+- `<distro><distro_version>_cuda<major>_<minor>`: A specific cuda version for a specific cuda version. See variables in .gitlab-cia.yml
 - **TODO**: `<distro><distro_version>`: all cuda versions for a distro version.
 - **TODO**: `cuda<major>_<minor>`: A cuda version for all distros.
 - **TODO**: `cudnn<version>`: A cudnn version for all distros.

@@ -120,9 +120,6 @@ trigger:
   only:
     variables:
       - $TRIGGER == null
-  except:
-    variables:
-      - $all == null
 
 .centos6_cuda10_1_only: &centos6_cuda10_1_only
   only:
