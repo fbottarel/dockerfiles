@@ -64,15 +64,18 @@ RUN cd simox/build && \
     make install
 RUN rm -Rf simox
 
-# Clone the GRASPA benchmark repository
-RUN git clone https://github.com/robotology/GRASPA-benchmark
-RUN mkdir GRASPA-benchmark/build && cd GRASPA-benchmark/build && \
-    cmake .. && make
+# Create environmental variable for simox
+RUN export Simox_DIR=/usr/local
 
-# Install the Python packages
-RUN pip3 install -r GRASPA-benchmark/requirements.txt
+# Clone the GRASPA benchmark repository (only for docker-user)
+#RUN git clone https://github.com/robotology/GRASPA-benchmark
+#RUN mkdir GRASPA-benchmark/build && cd GRASPA-benchmark/build && \
+#    cmake .. && make
 
-# Set up .bashrc
+# Install the Python packages (only for docker-user)
+#RUN pip3 install -r GRASPA-benchmark/requirements.txt
+
+# Set up .bashrc for root user
 RUN echo "alias python='/usr/bin/python3.6'" >> ~/.bashrc
 RUN echo "PS1='\[\e]0;\u \w\a\]\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\] \$ '" >> ~/.bashrc
 
@@ -81,8 +84,15 @@ RUN useradd -l -u 33333 -G sudo -md /home/gitpod -s /bin/bash -p gitpod gitpod &
     # passwordless sudo for users in the 'sudo' group
     sed -i.bkp -e 's/%sudo\s\+ALL=(ALL\(:ALL\)\?)\s\+ALL/%sudo ALL=NOPASSWD:ALL/g' /etc/sudoers
 
-# Copy the bashrc into the gitpod user directory
-RUN cp ~/.bashrc /home/gitpod
+# Change to gitpod user
+USER gitpod
+
+# Set up .bashrc for gitpod user
+RUN echo "alias python='/usr/bin/python3.6'" >> ~/.bashrc
+RUN echo "PS1='\[\e]0;\u \w\a\]\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\] \$ '" >> ~/.bashrc
+
+# Back to root user
+USER root
 
 # Set environmental variables
 ENV DISPLAY=:1
@@ -97,6 +107,25 @@ EXPOSE 5901
 # Manage noVNC port
 EXPOSE 6080
 
-# Launch bash from /workspace
-WORKDIR /workspace
+# Launch bash from gitpod user directory
+WORKDIR /home/gitpod
 CMD ["bash"]
+
+# gitpod must be take care of
+# - clone benchmark repo
+# - compile benchmark repo
+# - install python packages
+# - clone benchmark test
+# - create variable for where the experiment data is
+
+# docker user must be take care of
+# - clone benchmark repo 
+#RUN git clone https://github.com/robotology/GRASPA-benchmark
+# - compile benchmark repo
+#RUN mkdir GRASPA-benchmark/build && cd GRASPA-benchmark/build && \
+#    cmake .. && make
+# - install python packages
+#RUN pip3 install -r GRASPA-benchmark/requirements.txt
+# - clone benchmark test repo
+#RUN git clone https://github.com/robotology-playground/GRASPA-test.git
+# - create env variable for grasp experiment data
