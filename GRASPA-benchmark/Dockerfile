@@ -90,6 +90,10 @@ USER gitpod
 # Set up .bashrc for gitpod user
 RUN echo "alias python='/usr/bin/python3.6'" >> ~/.bashrc
 RUN echo "PS1='\[\e]0;\u \w\a\]\[\033[01;32m\]\u\[\033[00m\] \[\033[01;34m\]\w\[\033[00m\] \$ '" >> ~/.bashrc
+RUN echo "export GRASPA_DIR=/workspace/GRASPA-benchmark" >> ~/.bashrc
+RUN echo "export GRASPA_TEST_DIR=/workspace/GRASPA-test/experiment_data/right_arm/grasps_data" >> ~/.bashrc
+
+
 
 # Back to root user
 USER root
