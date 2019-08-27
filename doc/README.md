@@ -66,7 +66,7 @@ For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/cont
 - [`10.1-devel-ubuntu14.04` (*10.1/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu14.04/10.1/devel/Dockerfile)
 - [`10.1-cudnn7-devel-ubuntu14.04` (*10.1/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu14.04/10.1/devel/cudnn7/Dockerfile)
 
-### Redhat UBI 8
+### Red Hat UBI 8
 
 - [`10.1-base-ubi8` (*10.1/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/base/Dockerfile)
 - [`10.1-runtime-ubi8` (*10.1/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/runtime/Dockerfile)
@@ -74,7 +74,7 @@ For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/cont
 - [`10.1-devel-ubi8` (*10.1/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/devel/Dockerfile)
 - [`10.1-cudnn7-devel-ubi8` (*10.1/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/devel/cudnn7/Dockerfile)
 
-### Redhat UBI 7
+### Red Hat UBI 7
 
 - [`10.1-base-ubi7` (*10.1/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/10.1/base/Dockerfile)
 - [`10.1-runtime-ubi7` (*10.1/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/10.1/runtime/Dockerfile)

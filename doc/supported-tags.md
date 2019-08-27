@@ -134,9 +134,7 @@ A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 - [`8.0-cudnn7-runtime-ubuntu14.04` (*8.0/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu14.04/8.0/runtime/cudnn7/Dockerfile)
 - [`8.0-cudnn7-devel-ubuntu14.04` (*8.0/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu14.04/8.0/devel/cudnn7/Dockerfile)
 
-### Redhat UBI 8
-
-Redhat Universal Base Image
+### Red Hat UBI 8
 
 #### CUDA 10.1
 
@@ -146,9 +144,7 @@ Redhat Universal Base Image
 - [`10.1-devel-ubi8` (*10.1/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/devel/Dockerfile)
 - [`10.1-cudnn7-devel-ubi8` (*10.1/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/devel/cudnn7/Dockerfile)
 
-### Redhat UBI 7
-
-Redhat Universal Base Image
+### Red Hat UBI 7
 
 #### CUDA 10.1
 
