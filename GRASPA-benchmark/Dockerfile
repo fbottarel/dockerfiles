@@ -107,8 +107,8 @@ EXPOSE 5901
 # Manage noVNC port
 EXPOSE 6080
 
-# Launch bash from gitpod user directory
-WORKDIR /home/gitpod
+# Launch bash from workspace directory
+WORKDIR /workspace
 CMD ["bash"]
 
 # gitpod must be take care of
@@ -119,7 +119,7 @@ CMD ["bash"]
 # - create variable for where the experiment data is
 
 # docker user must be take care of
-# - clone benchmark repo 
+# - clone benchmark repo
 #RUN git clone https://github.com/robotology/GRASPA-benchmark
 # - compile benchmark repo
 #RUN mkdir GRASPA-benchmark/build && cd GRASPA-benchmark/build && \
