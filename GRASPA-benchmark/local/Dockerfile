@@ -102,9 +102,6 @@ EXPOSE 5901
 # Manage noVNC port
 EXPOSE 6080
 
-# Set up entrypoint
-#ENTRYPOINT ["/usr/bin/start-vnc-session.sh", "BACKGROUND"]
-
 # Launch bash from workspace directory
 CMD ["bash"]
 
