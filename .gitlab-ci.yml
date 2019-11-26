@@ -121,6 +121,28 @@ trigger:
     variables:
       - $TRIGGER == null
 
+.centos6_cuda10_2_only: &centos6_cuda10_2_only
+  only:
+    variables:
+      - $centos6_cuda10_2 == "true"
+      - $all == "true"
+
+centos6-v10.2:
+  <<: *cuda_base_definition
+  <<: *centos6_cuda10_2_only
+
+centos6-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos6_cuda10_2_only
+
+centos6-v10.2-test:
+  <<: *test_definition
+  <<: *centos6_cuda10_2_only
+
+centos6-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *centos6_cuda10_2_only
+
 .centos6_cuda10_1_only: &centos6_cuda10_1_only
   only:
     variables:
@@ -143,33 +165,6 @@ centos6-v10.1-deploy:
   <<: *deploy_definition
   <<: *centos6_cuda10_1_only
 
-# Internal testing only
-.centos6_cuda10_1_only_patched_glibc: &centos6_cuda10_1_only_patched_glibc
-  only:
-    variables:
-      - $centos6_cuda10_1_only_patched_glibc == "true"
-      - $all == "true"
-  # Do not run in production
-  except:
-    variables:
-      - $REGISTRY_TOKEN
-
-centos6-v10.1-patched-glibc:
-  <<: *cuda_base_definition
-  <<: *centos6_cuda10_1_only_patched_glibc
-
-centos6-v10.1-cudnn7-patched-glibc:
-  <<: *cudnn_definition
-  <<: *centos6_cuda10_1_only_patched_glibc
-
-centos6-v10.1-test-patched-glibc:
-  <<: *test_definition
-  <<: *centos6_cuda10_1_only_patched_glibc
-
-centos6-v10.1-deploy-patched-glibc:
-  <<: *deploy_definition
-  <<: *centos6_cuda10_1_only_patched_glibc
-
 .centos6_cuda10_0_only: &centos6_cuda10_0_only
   only:
     variables:
@@ -191,33 +186,6 @@ centos6-v10.0-test:
 centos6-v10.0-deploy:
   <<: *deploy_definition
   <<: *centos6_cuda10_0_only
-
-# Internal testing only
-.centos6_cuda10_0_only_patched_glibc: &centos6_cuda10_0_only_patched_glibc
-  only:
-    variables:
-      - $centos6_cuda10_0_only_patched_glibc == "true"
-      - $all == "true"
-  # Do not run in production
-  except:
-    variables:
-      - $REGISTRY_TOKEN
-
-centos6-v10.0-patched-glibc:
-  <<: *cuda_base_definition
-  <<: *centos6_cuda10_0_only_patched_glibc
-
-centos6-v10.0-cudnn7-patched-glibc:
-  <<: *cudnn_definition
-  <<: *centos6_cuda10_0_only_patched_glibc
-
-centos6-v10.0-test-patched-glibc:
-  <<: *test_definition
-  <<: *centos6_cuda10_0_only_patched_glibc
-
-centos6-v10.0-deploy-patched-glibc:
-  <<: *deploy_definition
-  <<: *centos6_cuda10_0_only_patched_glibc
 
 .centos6_cuda9_1_only: &centos6_cuda9_1_only
   only:
@@ -292,6 +260,28 @@ centos6-v8.0-test:
 centos6-v8.0-deploy:
   <<: *deploy_definition
   <<: *centos6_cuda8_0_only
+
+.centos7_cuda10.2_only: &centos7_cuda10_2_only
+  only:
+    variables:
+      - $centos7_cuda10_2 == "true"
+      - $all == "true"
+
+centos7-v10.2:
+  <<: *cuda_base_definition
+  <<: *centos7_cuda10_2_only
+
+centos7-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_cuda10_2_only
+
+centos7-v10.2-test:
+  <<: *test_definition
+  <<: *centos7_cuda10_2_only
+
+centos7-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *centos7_cuda10_2_only
 
 .centos7_cuda10.1_only: &centos7_cuda10_1_only
   only:
@@ -433,6 +423,28 @@ centos7-v8.0-deploy:
   <<: *deploy_definition
   <<: *centos7_cuda8_0_only
 
+.ubi7_cuda10_2_only: &ubi7_cuda10_2_only
+  only:
+    variables:
+      - $ubi7_cuda10_2 == "true"
+      - $all == "true"
+
+ubi7-v10.2:
+  <<: *cuda_base_definition
+  <<: *ubi7_cuda10_2_only
+
+ubi7-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_cuda10_2_only
+
+ubi7-v10.2-test:
+  <<: *test_definition
+  <<: *ubi7_cuda10_2_only
+
+ubi7-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_cuda10_2_only
+
 .ubi7_cuda10_1_only: &ubi7_cuda10_1_only
   only:
     variables:
@@ -573,6 +585,28 @@ ubi7-v8.0-deploy:
   <<: *deploy_definition
   <<: *ubi7_cuda8_0_only
 
+.ubi8_cuda10_2_only: &ubi8_cuda10_2_only
+  only:
+    variables:
+      - $ubi8_cuda10_2 == "true"
+      - $all == "true"
+
+ubi8-v10.2:
+  <<: *cuda_base_definition
+  <<: *ubi8_cuda10_2_only
+
+ubi8-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_cuda10_2_only
+
+ubi8-v10.2-test:
+  <<: *test_definition
+  <<: *ubi8_cuda10_2_only
+
+ubi8-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_cuda10_2_only
+
 .ubi8_cuda10_1_only: &ubi8_cuda10_1_only
   only:
     variables:
@@ -594,6 +628,33 @@ ubi8-v10.1-test:
 ubi8-v10.1-deploy:
   <<: *deploy_definition
   <<: *ubi8_cuda10_1_only
+
+.ubuntu18_04_cuda10_2_only: &ubuntu18_04_cuda10_2_only
+  only:
+    variables:
+      - $ubuntu18_04_cuda10_2 == "true"
+      - $all == "true"
+
+ubuntu18.04-v10.2:
+  variables:
+    LATEST: "true"
+    NO_OS_SUFFIX: "true"
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_cuda10_2_only
+
+ubuntu18.04-v10.2-cudnn7:
+  variables:
+    NO_OS_SUFFIX: "true"
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_cuda10_2_only
+
+ubuntu18.04-v10.2-test:
+  <<: *test_definition
+  <<: *ubuntu18_04_cuda10_2_only
+
+ubuntu18.04-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_cuda10_2_only
 
 .ubuntu18_04_cuda10_1_only: &ubuntu18_04_cuda10_1_only
   only:
@@ -669,6 +730,28 @@ ubuntu18.04-v9.2-test:
 ubuntu18.04-v9.2-deploy:
   <<: *deploy_definition
   <<: *ubuntu18_04_cuda9_2_only
+
+.ubuntu16_04_cuda10.2_only: &ubuntu16_04_cuda10_2_only
+  only:
+    variables:
+      - $ubuntu16_04_cuda10_2 == "true"
+      - $all == "true"
+
+ubuntu16.04-v10.2:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_cuda10_2_only
+
+ubuntu16.04-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_cuda10_2_only
+
+ubuntu16.04-v10.2-test:
+  <<: *test_definition
+  <<: *ubuntu16_04_cuda10_2_only
+
+ubuntu16.04-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_cuda10_2_only
 
 .ubuntu16_04_cuda10.1_only: &ubuntu16_04_cuda10_1_only
   only:

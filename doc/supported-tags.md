@@ -4,6 +4,14 @@ A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 
 ### Ubuntu 18.04
 
+#### CUDA 10.2
+
+- [`10.2-base`, `10.2-base-ubuntu18.04` (*10.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/10.2/base/Dockerfile)
+- [`10.2-runtime`, `10.2-runtime-ubuntu18.04` (*10.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/10.2/runtime/Dockerfile)
+- [`10.2-cudnn7-runtime`, `10.2-cudnn7-runtime-ubuntu18.04` (*10.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/10.2/runtime/cudnn7/Dockerfile)
+- [`latest`, `10.2-devel`, `10.2-devel-ubuntu18.04` (*10.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/10.2/devel/Dockerfile)
+- [`10.2-cudnn7-devel`, `10.2-cudnn7-devel-ubuntu18.04` (*10.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/10.2/devel/cudnn7/Dockerfile)
+
 #### CUDA 10.1
 
 - [`10.1-base`, `10.1-base-ubuntu18.04` (*10.1/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/10.1/base/Dockerfile)
@@ -29,6 +37,14 @@ A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 - [`9.2-cudnn7-devel`, `9.2-cudnn7-devel-ubuntu18.04` (*9.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/9.2/devel/cudnn7/Dockerfile)
 
 ### Ubuntu 16.04
+
+#### CUDA 10.2
+
+- [`10.2-base-ubuntu16.04` (*10.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/10.2/base/Dockerfile)
+- [`10.2-runtime-ubuntu16.04` (*10.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/10.2/runtime/Dockerfile)
+- [`10.2-cudnn7-runtime`, `10.2-cudnn7-runtime-ubuntu16.04` (*10.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/10.2/runtime/cudnn7/Dockerfile)
+- [`10.2-devel-ubuntu16.04` (*10.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/10.2/devel/Dockerfile)
+- [`10.2-cudnn7-devel`, `10.2-cudnn7-devel-ubuntu16.04` (*10.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/10.2/devel/cudnn7/Dockerfile)
 
 #### CUDA 10.1
 
@@ -136,6 +152,14 @@ A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 
 ### Red Hat UBI 8
 
+#### CUDA 10.2
+
+- [`10.2-base-ubi8` (*10.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.2/base/Dockerfile)
+- [`10.2-runtime-ubi8` (*10.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.2/runtime/Dockerfile)
+- [`10.2-cudnn7-runtime-ubi8` (*10.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.2/runtime/cudnn7/Dockerfile)
+- [`10.2-devel-ubi8` (*10.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.2/devel/Dockerfile)
+- [`10.2-cudnn7-devel-ubi8` (*10.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.2/devel/cudnn7/Dockerfile)
+
 #### CUDA 10.1
 
 - [`10.1-base-ubi8` (*10.1/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/base/Dockerfile)
@@ -145,6 +169,14 @@ A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 - [`10.1-cudnn7-devel-ubi8` (*10.1/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi8/10.1/devel/cudnn7/Dockerfile)
 
 ### Red Hat UBI 7
+
+#### CUDA 10.2
+
+- [`10.2-base-ubi7` (*10.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/10.2/base/Dockerfile)
+- [`10.2-runtime-ubi7` (*10.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/10.2/runtime/Dockerfile)
+- [`10.2-cudnn7-runtime-ubi7` (*10.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/10.2/runtime/cudnn7/Dockerfile)
+- [`10.2-devel-ubi7` (*10.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/10.2/devel/Dockerfile)
+- [`10.2-cudnn7-devel-ubi7` (*10.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/10.2/devel/cudnn7/Dockerfile)
 
 #### CUDA 10.1
 
@@ -199,6 +231,14 @@ A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 
 ### CentOS 7
 
+#### CUDA 10.2
+
+- [`10.2-base-centos7` (*10.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/10.2/base/Dockerfile)
+- [`10.2-runtime-centos7` (*10.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/10.2/runtime/Dockerfile)
+- [`10.2-cudnn7-runtime-centos7` (*10.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/10.2/runtime/cudnn7/Dockerfile)
+- [`10.2-devel-centos7` (*10.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/10.2/devel/Dockerfile)
+- [`10.2-cudnn7-devel-centos7` (*10.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/10.2/devel/cudnn7/Dockerfile)
+
 #### CUDA 10.1
 
 - [`10.1-base-centos7` (*10.1/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/10.1/base/Dockerfile)
@@ -251,6 +291,14 @@ A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 - [`8.0-cudnn7-devel-centos7` (*8.0/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/8.0/devel/cudnn7/Dockerfile)
 
 ### CentOS 6
+
+#### CUDA 10.2
+
+- [`10.2-base-centos6` (*10.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/10.2/base/Dockerfile)
+- [`10.2-runtime-centos6` (*10.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/10.2/runtime/Dockerfile)
+- [`10.2-cudnn7-runtime-centos6` (*10.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/10.2/runtime/cudnn7/Dockerfile)
+- [`10.2-devel-centos6` (*10.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/10.2/devel/Dockerfile)
+- [`10.2-cudnn7-devel-centos6` (*10.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/10.2/devel/cudnn7/Dockerfile)
 
 #### CUDA 10.1
 
