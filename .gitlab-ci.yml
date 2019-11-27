@@ -6,7 +6,7 @@ image: docker:stable
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  IMAGE_NAME: "${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}"
+  IMAGE_NAME: "nvidia/cuda"
 
 before_script:
   - apk add --no-cache git bash findutils python3 python3-dev curl g++
@@ -918,71 +918,71 @@ ubuntu16.04-v8.0-deploy:
 #     variables:
 #       - $ubuntu14_04_cuda10_1 == "true"
 #       - $all == "true"
-# 
+#
 # ubuntu14.04-v10.1:
 #   <<: *cuda_base_definition
 #   <<: *ubuntu14_04_cuda10_1_only
-# 
+#
 # ubuntu14.04-v10.1-cudnn7:
 #   <<: *cudnn_definition
 #   <<: *ubuntu14_04_cuda10_1_only
-# 
+#
 # ubuntu14.04-v10.1-test:
 #   <<: *test_definition
 #   <<: *ubuntu14_04_cuda10_1_only
-# 
+#
 # ubuntu14.04-v10.1-deploy:
 #   <<: *deploy_definition
 #   <<: *ubuntu14_04_cuda10_1_only
-# 
+#
 # .ubuntu14_04_cuda10.0_only: &ubuntu14_04_cuda10_0_only
 #   only:
 #     variables:
 #       - $ubuntu14_04_cuda10_0 == "true"
 #       - $all == "true"
-# 
+#
 # ubuntu14.04-v10.0:
 #   <<: *cuda_base_definition
 #   <<: *ubuntu14_04_cuda10_0_only
-# 
+#
 # ubuntu14.04-v10.0-cudnn7:
 #   <<: *cudnn_definition
 #   <<: *ubuntu14_04_cuda10_0_only
-# 
+#
 # ubuntu14.04-v10.0-test:
 #   <<: *test_definition
 #   <<: *ubuntu14_04_cuda10_0_only
-# 
+#
 # ubuntu14.04-v10.0-deploy:
 #   <<: *deploy_definition
 #   <<: *ubuntu14_04_cuda10_0_only
-# 
+#
 # .ubuntu14_04_cuda8_0_only: &ubuntu14_04_cuda8_0_only
 #   only:
 #     variables:
 #       - $ubuntu14_04_cuda8_0 == "true"
 #       - $all == "true"
-# 
+#
 # ubuntu14.04-v8.0:
 #   <<: *cuda_definition_deprecated
 #   <<: *ubuntu14_04_cuda8_0_only
-# 
+#
 # ubuntu14.04-v8.0-cudnn7:
 #   <<: *cudnn_definition
 #   <<: *ubuntu14_04_cuda8_0_only
-# 
+#
 # ubuntu14.04-v8.0-cudnn6:
 #   <<: *cudnn_definition
 #   <<: *ubuntu14_04_cuda8_0_only
-# 
+#
 # ubuntu14.04-v8.0-cudnn5:
 #   <<: *cudnn_definition
 #   <<: *ubuntu14_04_cuda8_0_only
-# 
+#
 # ubuntu14.04-v8.0-test:
 #   <<: *test_definition
 #   <<: *ubuntu14_04_cuda8_0_only
-# 
+#
 # ubuntu14.04-v8.0-deploy:
 #   <<: *deploy_definition
 #   <<: *ubuntu14_04_cuda8_0_only
