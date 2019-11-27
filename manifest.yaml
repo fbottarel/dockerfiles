@@ -268,29 +268,3 @@ ubuntu16.04:
         version: "6.0.21"
       cudnn5:
         version: "5.1.10"
-
-ubuntu14.04:
-  template_path: ubuntu
-  base_image: ubuntu:14.04
-  cuda:
-    v10.1:
-      build_version: 243
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
-      nccl_version: 2.4.8
-      cudnn7:
-        version: "7.6.5.32"
-    v10.0:
-      build_version: 130
-      nccl_version: 2.5.6
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-    v8.0:
-      build_version: 61
-      nccl_version: 2.4.2
-      cudnn7:
-        version: "7.2.1.38"
-      cudnn6:
-        version: "6.0.21"
-      cudnn5:
-        version: "5.1.10"
