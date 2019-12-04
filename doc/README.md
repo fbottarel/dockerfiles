@@ -1,6 +1,6 @@
 ## NVIDIA CUDA
 
-[![build status](https://gitlab.com/nvidia/container-images/cuda/badges/master/build.svg)](https://gitlab.com/nvidia/container-images/cuda/commits/master)
+[![build status](https://gitlab.com/nvidia/container-images/cuda/badges/master/pipeline.svg)](https://gitlab.com/nvidia/container-images/cuda/commits/master)
 
 CUDA is a parallel computing platform and programming model developed by NVIDIA for general computing on graphical processing units (GPUs). With CUDA, developers can dramatically speed up computing applications by harnessing the power of GPUs.
 
