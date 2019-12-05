@@ -91,6 +91,16 @@ class Manager(cli.Application):
                     ci_vars.append(match.groups(0)[0])
         return ci_vars
 
+    def ci_cuda_version_variables(self, version):
+        rgx = re.compile(fr"^\s+- \$(?!all)([\w]+{version}) == \"true\"$")
+        ci_vars = []
+        with open(".gitlab-ci.yml", "r") as fp:
+            for _, line in enumerate(fp):
+                match = rgx.match(line)
+                if match:
+                    ci_vars.append(match.groups(0)[0])
+        return ci_vars
+
     def main(self):
         self._load_app_config()
         if not self.nested_command:  # will be ``None`` if no sub-command follows
@@ -135,10 +145,16 @@ class ManagerTrigger(Manager):
                 jobs = []
                 jobs.append(pipeline)
                 if "," in pipeline:
-                    jobs = pipeline.split(",")
+                    jobs = [x.strip() for x in pipeline.split(",")]
                 for job in jobs:
                     if "_cuda" not in job:
-                        for cvar in self.ci_distro_variables(job):
+                        if any(
+                            distro in job for distro in self.supported_distro_list()
+                        ):
+                            cijobvars = self.ci_distro_variables(job)
+                        else:
+                            cijobvars = self.ci_cuda_version_variables(job)
+                        for cvar in cijobvars:
                             log.info("Triggering '%s'", cvar)
                             self.trigger_explicit.append(cvar)
                     else:
@@ -563,6 +579,7 @@ class ManagerGenerate(Manager):
                 "full": f"{self.cuda_version}.{build_version}",
                 "major": major,
                 "minor": minor,
+                "build": build_version,
             },
             "os": {"distro": self.distro, "version": self.distro_version},
             "tag_suffix": self.tag_suffix,

@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 cuda-libraries-dev-$CUDA_PKG_VERSION \
         cuda-minimal-build-$CUDA_PKG_VERSION \
         libnccl-dev=$NCCL_VERSION-1+cuda10.1 \
+libcublas-dev=10.2.1.243-1 \
 && \
     rm -rf /var/lib/apt/lists/*
 
