@@ -67,6 +67,8 @@ RUN rm -rf opencv
 # Compile and install GPD
 RUN git clone https://github.com/fbottarel/gpd.git
 WORKDIR /home/${ros_distro}-dev/gpd
+RUN sed -i 's/\.\./\/home\/melodic-dev\/gpd/g' cfg/eigen_params.cfg
+RUN sed -i 's/\/home\/andreas\/projects\/gpd/\/home\/melodic-dev\/gpd\/models/g' cfg/ros_eigen_params.cfg
 RUN mkdir build && cd build && cmake .. && sudo make -j8 install
 
 # Compile and install GPD ROS wrapper with custom stuff
