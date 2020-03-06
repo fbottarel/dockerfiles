@@ -41,15 +41,15 @@ ENV CATKIN_WS /home/${ros_distro}-dev/catkin_ws
 # Clone and build OpenCV 3.4.x
 RUN git clone https://github.com/opencv/opencv.git
 WORKDIR /home/${ros_distro}-dev/opencv
-RUN sudo apt-get install -y build-essential cmake unzip pkg-config
-RUN sudo apt-get install -y libjpeg-dev libpng-dev libtiff-dev
+RUN sudo apt-get install -y build-essential cmake unzip pkg-config \
+    libjpeg-dev libpng-dev libtiff-dev
 RUN sudo add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
 RUN sudo apt update
 RUN sudo apt-get install -y libjasper1 libjasper-dev \
         libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
-        libxvidcore-dev libx264-dev \
-        libgtk-3-dev \
+        libxvidcore-dev libx264-dev libgtk-3-dev \
         libatlas-base-dev gfortran
+        && rm -rf /var/likb/apt/lists/*
 RUN git checkout 3.4.9
 RUN mkdir build
 RUN cd build && cmake -D CMAKE_BUILD_TYPE=RELEASE \
