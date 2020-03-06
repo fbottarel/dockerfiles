@@ -32,4 +32,4 @@ docker run -it --rm \
     --net=host \
     --privileged \
     --name "gpd-ros-container" \
-    ros_gpd:dev
+    ros_gpd:latest
