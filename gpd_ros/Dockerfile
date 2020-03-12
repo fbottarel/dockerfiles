@@ -23,7 +23,7 @@ RUN apt-get update && \
         libgl1-mesa-glx \
         libgl1-mesa-dri \
         mesa-utils \
-        && rm -rf /var/likb/apt/lists/*
+        && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /home/${ros_distro}-dev && \
     echo "${ros_distro}-dev:x:${uid}:${gid}:Developer,,,:/home/${ros_distro}-dev:/bin/bash" >> /etc/passwd && \
@@ -49,7 +49,7 @@ RUN sudo apt-get install -y libjasper1 libjasper-dev \
         libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
         libxvidcore-dev libx264-dev libgtk-3-dev \
         libatlas-base-dev gfortran
-        && rm -rf /var/likb/apt/lists/*
+        && rm -rf /var/lib/apt/lists/*
 RUN git checkout 3.4.9
 RUN mkdir build
 RUN cd build && cmake -D CMAKE_BUILD_TYPE=RELEASE \
