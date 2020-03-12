@@ -48,7 +48,7 @@ RUN sudo apt update
 RUN sudo apt-get install -y libjasper1 libjasper-dev \
         libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
         libxvidcore-dev libx264-dev libgtk-3-dev \
-        libatlas-base-dev gfortran
+        libatlas-base-dev gfortran \
         && rm -rf /var/lib/apt/lists/*
 RUN git checkout 3.4.9
 RUN mkdir build
