@@ -4,7 +4,7 @@ The purpose of this directory is to host whatever is necessary to build and run 
 
 ### Usage
 
-1. Use the `build_image.sh` shell script to locally build the image. At the moment, the image has lots of excess fat and weighs around 5 gigs. I am absolutely sure that it can be trimmed down a lot, but at the moment it shall do.
+1. Use the `build_image.sh` shell script to locally build the image. At the moment, the image has lots of excess fat and weighs around 5 gigs. I am absolutely sure that it can be trimmed down a lot, but at the moment it shall do. You can skip the build phase if you wish, the image is already compiled and ready to download on DockerHub.
 
 2. Use the `run.sh` script to run the X11 accelerated container. Foolproof.
 
