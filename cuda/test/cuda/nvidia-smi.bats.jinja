@@ -1,0 +1,22 @@
+#!/usr/bin/env bats
+
+load helpers
+
+{% set base_img = "base" -%}
+{% if cuda.version.major == "8" -%}
+{% set base_img = "runtime" -%}
+{% endif -%}
+image="${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ base_img }}-${OS}${IMAGE_TAG_SUFFIX}"
+
+function setup() {
+    check_runtime
+}
+
+function teardown() {
+    cleanup
+}
+
+@test "nvidia-smi" {
+    docker_run --rm --runtime=nvidia ${image} nvidia-smi
+    [ "$status" -eq 0 ]
+}
