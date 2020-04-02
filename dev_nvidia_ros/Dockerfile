@@ -17,16 +17,10 @@ ARG gid
 ARG username=${ros_distro}-dev
 
 # ======================================
-# Set up locales
-# ======================================
-
-RUN echo 'Etc/UTC' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-    apt-get update && apt-get install -q -y tzdata && rm -rf /var/lib/apt/lists/*
-
-# ======================================
 # Set up some basic packages
 # ======================================
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     nano \
@@ -34,7 +28,19 @@ RUN apt-get update && apt-get install -y \
     lsb-release \
     wget \
     unzip \
+    locales \
+    software-properties-common \
+    tree \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+# ======================================
+# Set up locales
+# ======================================
+
+RUN sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen && \
+    locale-gen &&\
+    update-locale LANG="en_US.UTF-8"
 
 # ======================================
 # Set up development stuff
@@ -42,10 +48,22 @@ RUN apt-get update && apt-get install -y \
 
 RUN apt-get update && apt-get install -y \
     git \
+    build-essential \
+    gdb \
     cmake \
     cmake-curses-gui \
     python \
     python-pip
+
+# ======================================
+# Setup HW Acceleration for Intel graphic cards
+# ======================================
+
+    RUN apt-get update &&\
+        apt-get install -y \
+            libgl1-mesa-glx \
+            libgl1-mesa-dri &&\
+        rm -rf /var/lib/apt/lists/*
 
 # ======================================
 # Set up ROS full desktop installation
@@ -75,23 +93,12 @@ ENV ROS_DISTRO ${ros_distro}
 # Set up non-root user (TENTATIVE)
 # ======================================
 
-RUN groupadd -f -g ${gid} ${username}
-
-RUN adduser \
-    --uid ${uid} \
-    --gid ${gid} \
-    ${username}
-
-# ======================================
-# Setup HW Acceleration for Intel graphic cards
-# ======================================
-
-RUN apt-get update &&\
-    apt-get install -y \
-        libgl1-mesa-glx \
-        libgl1-mesa-dri \
-        &&\
-    rm -rf /var/lib/apt/lists/*
+# RUN groupadd -f -g ${gid} ${username}
+#
+# RUN adduser \
+#     --uid ${uid} \
+#     --gid ${gid} \
+#     ${username}
 
 # ======================================
 # Other stuff
