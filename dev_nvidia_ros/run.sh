@@ -1,32 +1,43 @@
 # ====================================
 # Run command.
-# Add --network=host and --privileged if connecting to other ROS nodes. This
-# however somehow breaks GUIs like rViz and rqt if using GPUs.
+# Add --network=host and --privileged if connecting to other ROS nodes
 # ====================================
+
+XSOCK=/tmp/.X11-unix
+XAUTH=/tmp/.docker.xauth
+
+if [ ! -f $XAUTH ]
+then
+    xauth_list=$(xauth nlist :0 | sed -e 's/^..../ffff/')
+    if [ ! -z "$xauth_list" ]
+    then
+        echo $xauth_list | xauth -f $XAUTH nmerge -
+    else
+        touch $XAUTH
+    fi
+    chmod a+r $XAUTH
+fi
 
 docker run \
     -it \
-    --init \
     --name="ros-container" \
     -e DISPLAY \
     -e QT_X11_NO_MITSHM=1 \
     -e USER_UID=1000 \
     -e USER_GID=1000 \
-    -e USERNAME=ros-dev \
-    -e XAUTORITY=/tmp/.rl.xauth \
-    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-    -v /tmp/.rl.xauth \
+    -e USERNAME=fbottarel \
+    -e XAUTHORITY=${XAUTH} \
+    --volume=$XSOCK:$XSOCK:rw \
+    --volume=$XAUTH:$XAUTH:rw \
     --device /dev/dri \
     --gpus=all \
+    --network=host \
+    --privileged \
     --rm \
-    fbottarel/ros:nvidia
+    fbottarel/ros:nvidia \
+    bash
 
 # ====================================
-# Alternative run script
+# Once the script is running:
 # ====================================
-#docker run --gpus all --init -it --device /dev/dri -e USER_UID=1000 -e USER_GID=1000 -e DISPLAY -e XAUTORITY=/tmp/.rl.xauth -v /tmp/.X11-unix:/tmp/.X11-unix:rw -v /tmp/.rl.xauth --rm fbottarel/ros:nvidia su -c "bash" ros-dev
-
-# ====================================
-# Once the script is running: 
-# ====================================
-# docker exec -it -u ros-dev ros-container bash
+# docker exec -it -u [user] ros-container bash

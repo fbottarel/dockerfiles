@@ -1,8 +1,11 @@
+# ====================================
+# Build command.
+# Change the ros distro and starting image for the recipe if needed
+# ====================================
+
 docker build \
     --build-arg from=nvidia/cudagl:10.0-devel-ubuntu18.04 \
-    --build-arg ros-distro=melodic \
-    --build-arg uid=$(id -u) \
-    --build-arg gid=$(id -g) \
+    --build-arg ros_distro=melodic \
     --rm \
     --pull \
     -t fbottarel/ros:nvidia .

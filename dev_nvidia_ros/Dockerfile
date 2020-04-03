@@ -1,7 +1,5 @@
 ARG from=ubuntu:bionic
 ARG ros_distro=melodic
-ARG uid=1000
-ARG gid=1000
 
 FROM ${from}
 
@@ -12,9 +10,6 @@ MAINTAINER Fabrizio Bottarel <fabrizio.bottarel@iit.it>
 # ======================================
 
 ARG ros_distro
-ARG uid
-ARG gid
-ARG username=${ros_distro}-dev
 
 # ======================================
 # Set up some basic packages
@@ -90,15 +85,20 @@ RUN apt-get update && apt-get install -y \
 ENV ROS_DISTRO ${ros_distro}
 
 # ======================================
-# Set up non-root user (TENTATIVE)
+# Set up sudo user (don't do this if you don't want a sudo user)
 # ======================================
 
-# RUN groupadd -f -g ${gid} ${username}
-#
-# RUN adduser \
-#     --uid ${uid} \
-#     --gid ${gid} \
-#     ${username}
+#Add new sudo user
+# ENV USERNAME fbottarel
+# RUN useradd -m $USERNAME && \
+#         echo "$USERNAME:$USERNAME" | chpasswd && \
+#         usermod --shell /bin/bash $USERNAME && \
+#         usermod -aG sudo $USERNAME && \
+#         echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME && \
+#         chmod 0440 /etc/sudoers.d/$USERNAME && \
+#         # Replace 1000 with your user/group id
+#         usermod  --uid 1000 $USERNAME && \
+#         groupmod --gid 1000 $USERNAME
 
 # ======================================
 # Other stuff
@@ -112,6 +112,7 @@ ENV QT_X11_NO_MITSHM 1
 # ======================================
 
 COPY entrypoint.sh /usr/sbin/entrypoint.sh
+COPY bashrc /root/.bashrc
 RUN chmod 755 /usr/sbin/entrypoint.sh
 ENTRYPOINT ["/usr/sbin/entrypoint.sh"]
 CMD ["bash"]
