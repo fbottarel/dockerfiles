@@ -11,8 +11,8 @@ fi
 
 USERNAME=$1
 CONTAINERNAME=$2
-XSOCK=/tmp/.X11-unix
-XAUTH=/tmp/.$CONTAINERNAME.xauth
+XSOCK="/tmp/.X11-unix"
+XAUTH="/tmp/.$CONTAINERNAME.xauth"
 
 echo "Running container $CONTAINERNAME as $USERNAME..."
 
@@ -45,6 +45,7 @@ fi
 
 # ====================================
 # Add --network=host and --privileged if connecting to other ROS nodes
+# Add --volume=<host-volume>:<mount-point> for sharing the host filesystem
 # ====================================
 
 if [ ! "$(docker ps -a | grep $CONTAINERNAME)" ]
@@ -72,4 +73,4 @@ fi
 # ====================================
 # Once the script is running:
 # ====================================
-# docker exec -it -u [user] ros-container bash
+# docker exec -it -u <user> ros-container bash
