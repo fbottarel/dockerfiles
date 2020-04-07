@@ -1,41 +1,73 @@
 # ====================================
-# Run command.
-# Add --network=host and --privileged if connecting to other ROS nodes
+# Run command. Verify if the xauth file exists or if a container with the same
+# name is already running.
 # ====================================
 
+if [ "$#" -lt 2 ]; then
+    echo "Illegal number of parameters. Usage: run.sh <username> <container-id>"
+    echo "Example: run.sh fbottarel ros-container"
+    exit 1
+fi
+
+USERNAME=$1
+CONTAINERNAME=$2
 XSOCK=/tmp/.X11-unix
-XAUTH=/tmp/.docker.xauth
+XAUTH=/tmp/.$CONTAINERNAME.xauth
+
+echo "Running container $CONTAINERNAME as $USERNAME..."
+
+# ====================================
+# Create a Xauth file for each container if it does not already exist
+# ====================================
 
 if [ ! -f $XAUTH ]
 then
-    xauth_list=$(xauth nlist :0 | sed -e 's/^..../ffff/')
-    if [ ! -z "$xauth_list" ]
-    then
-        echo $xauth_list | xauth -f $XAUTH nmerge -
-    else
-        touch $XAUTH
-    fi
-    chmod a+r $XAUTH
+    xauth nlist :0 | sed -e 's/^..../ffff/' | xauth -f $XAUTH nmerge -
+    chmod a+x $XAUTH
+    echo "Created file Xauth file $XAUTH"
 fi
 
-docker run \
-    -it \
-    --name="ros-container" \
-    -e DISPLAY \
-    -e QT_X11_NO_MITSHM=1 \
-    -e USER_UID=1000 \
-    -e USER_GID=1000 \
-    -e USERNAME=fbottarel \
-    -e XAUTHORITY=${XAUTH} \
-    --volume=$XSOCK:$XSOCK:rw \
-    --volume=$XAUTH:$XAUTH:rw \
-    --device /dev/dri \
-    --gpus=all \
-    --network=host \
-    --privileged \
-    --rm \
-    fbottarel/ros:nvidia \
-    bash
+# ====================================
+# Alternative way to create the xauth file
+# ====================================
+
+# if [ ! -f $XAUTH ]
+# then
+#     xauth_list=$(xauth nlist :0 | sed -e 's/^..../ffff/')
+#     if [ ! -z "$xauth_list" ]
+#     then
+#         echo $xauth_list | xauth -f $XAUTH nmerge -
+#     else
+#         touch $XAUTH
+#     fi
+#     chmod a+r $XAUTH
+# fi
+
+# ====================================
+# Add --network=host and --privileged if connecting to other ROS nodes
+# ====================================
+
+if [ ! "$(docker ps -a | grep $CONTAINERNAME)" ]
+then
+    docker run \
+        -it \
+        --name=$CONTAINERNAME \
+        -e DISPLAY \
+        -e QT_X11_NO_MITSHM=1 \
+        -e USER_UID=1000 \
+        -e USER_GID=1000 \
+        -e USERNAME=$USERNAME \
+        -e XAUTHORITY=$XAUTH \
+        --volume=$XSOCK:$XSOCK:rw \
+        --volume=$XAUTH:$XAUTH:rw \
+        --device /dev/dri \
+        --gpus=all \
+        fbottarel/ros:nvidia \
+        bash
+else
+    docker start $CONTAINERNAME > /dev/null
+    docker exec -it -u $1 $2 bash
+fi
 
 # ====================================
 # Once the script is running:
