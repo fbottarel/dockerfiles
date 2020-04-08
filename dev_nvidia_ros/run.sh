@@ -4,13 +4,14 @@
 # ====================================
 
 if [ "$#" -lt 2 ]; then
-    echo "Illegal number of parameters. Usage: run.sh <username> <container-id>"
+    echo "Illegal number of parameters. Usage: run.sh <username> <container-id> [image-name]"
     echo "Example: run.sh fbottarel ros-container"
     exit 1
 fi
 
-USERNAME=$1
-CONTAINERNAME=$2
+USERNAME=${1:-"fbottarel"}
+CONTAINERNAME=${2:-"ros-container"}
+IMAGENAME=${3:-"fbottarel/ros:nvidia"}
 XSOCK="/tmp/.X11-unix"
 XAUTH="/tmp/.$CONTAINERNAME.xauth"
 
@@ -63,7 +64,8 @@ then
         --volume=$XAUTH:$XAUTH:rw \
         --device /dev/dri \
         --gpus=all \
-        fbottarel/ros:nvidia \
+        --volume=$HOME/workspace/docker-shared-workspace/shape-completion:/home/$USERNAME/workspace \
+        $IMAGENAME \
         bash
 else
     docker start $CONTAINERNAME > /dev/null
