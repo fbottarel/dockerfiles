@@ -14,7 +14,7 @@ The full image (ROS desktop + nVidia CUDA development + OpenGL support) comes in
 
 If you don't have a nVidia card, you don't need most of the stuff in this image. Build the image starting from something lightweight like `ubuntu:bionic` or `ubuntu:xenial` and keep the Intel hardware acceleration.
 
-If you need nVidia hardware support, I got your back. This image by default includes most stuff you might need, however you can scale back and reduce image size. The `[nVidia image repos](https://gitlab.com/nvidia/container-images)` feature plenty of choice:
+If you need nVidia hardware support, I got your back. This image by default includes most stuff you might need, however you can scale back and reduce image size. The [nVidia image repos](https://gitlab.com/nvidia/container-images) feature plenty of choice:
 
 - different versions of [CUDA](https://gitlab.com/nvidia/container-images/cuda), i.e. `base`, `runtime` or `devel` with CUDA 9 and 10
 - different versions of [CUDA+OpenGL](https://gitlab.com/nvidia/container-images/cudagl)
