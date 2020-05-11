@@ -51,6 +51,7 @@ fi
 
 if [ ! "$(docker ps -a | grep $CONTAINERNAME)" ]
 then
+    mkdir -p $HOME/workspace/docker-shared-workspace/$CONTAINERNAME
     docker run \
         -it \
         --name=$CONTAINERNAME \
@@ -64,12 +65,12 @@ then
         --volume=$XAUTH:$XAUTH:rw \
         --device /dev/dri \
         --gpus=all \
-        --volume=$HOME/workspace/docker-shared-workspace/shape-completion:/home/$USERNAME/workspace \
+        --volume=$HOME/workspace/docker-shared-workspace/$CONTAINERNAME:/home/$USERNAME/workspace \
         $IMAGENAME \
         bash
 else
     docker start $CONTAINERNAME > /dev/null
-    docker exec -it -u $1 $2 bash
+    docker exec -it -u $USERNAME $CONTAINERNAME bash
 fi
 
 # ====================================
