@@ -57,7 +57,7 @@ RUN pip3 install torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download
 # Setup an additional entrypoint script
 # ======================================
 
-COPY ../entrypoint.sh /usr/sbin/entrypoint.sh
+COPY entrypoint.sh /usr/sbin/entrypoint.sh
 RUN chmod 755 /usr/sbin/entrypoint.sh
 ENTRYPOINT ["/usr/sbin/entrypoint.sh"]
 CMD ["bash"]
