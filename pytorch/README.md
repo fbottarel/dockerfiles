@@ -7,12 +7,14 @@ Dockerfile for isolated PyTorch development environments. This docker image incl
 - System-wide Pytorch installation
 - Sudoer user created at runtime.
 
-
+<center>
+  
 | | Base image  | Image name |
 |-------------| ------------- | ------------- |
 |[![](https://images.microbadger.com/badges/version/fbottarel/pytorch.svg)](https://microbadger.com/images/fbottarel/pytorch "Get your own version badge on microbadger.com")| `nvidia/cudagl:10.1-devel-ubuntu18.04`  | [fbottarel/pytorch:gpu](https://hub.docker.com/layers/fbottarel/pytorch/gpu/images/sha256-27f7c7b91ca7e4e95a3a0ba6ee8755fdebc6e6a1a14a2937c3891092b364914a?context=repo) |
 |[![](https://images.microbadger.com/badges/version/fbottarel/pytorch:cpu.svg)](https://microbadger.com/images/fbottarel/pytorch:cpu "Get your own version badge on microbadger.com")| `ubuntu:bionic`  | [fbottarel/pytorch:cpu](https://hub.docker.com/layers/fbottarel/pytorch/cpu/images/sha256-89489b54e9583bfa4d85c3012326da00a0645fb73ddd208b80d8cbdea44cc8a3?context=repo)  |
 
+</center>
 
 #### nVidia hardware support
 
