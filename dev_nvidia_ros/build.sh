@@ -4,8 +4,8 @@
 # ====================================
 
 docker build \
-    --build-arg from=nvidia/cudagl:10.0-devel-ubuntu18.04 \
+    --build-arg from=nvidia/cudagl:10.1-devel-ubuntu18.04 \
     --build-arg ros_distro=melodic \
     --rm \
     --pull \
-    -t fbottarel/ros:nvidia .
+    -t fbottarel/ros:nvidia-cudagl10.1-devel .
