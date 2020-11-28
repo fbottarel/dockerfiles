@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:xenial
 LABEL maintainer="fabrizio.bottarel@iit.it"
 
 # Non-interactive installation mode
