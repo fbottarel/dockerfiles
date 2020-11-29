@@ -38,7 +38,7 @@ RUN add-apt-repository ppa:deadsnakes/ppa -y && \
 
 # Install websockify
 RUN git clone https://github.com/novnc/websockify.git /opt/websockify && \
-    cd /opt/websockify && \
+    cd /opt/websockify && git checkout v0.9.0 && \
     python3 setup.py install
 
 # Clone noVNC
