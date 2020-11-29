@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
 LABEL maintainer="fabrizio.bottarel@iit.it"
 
 # Non-interactive installation mode
@@ -32,9 +32,10 @@ RUN git clone https://github.com/LibVNC/x11vnc.git /opt/x11vnc && \
 RUN apt install -y terminator
 
 # Install python3
-RUN add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt dist-upgrade -y && \
-    apt install -y python3 python3-dev python3-pip python3-setuptools
+# RUN add-apt-repository ppa:deadsnakes/ppa -y && \
+#     apt dist-upgrade -y && \
+RUN apt install -y python3 python3-dev python3-pip python3-setuptools
+RUN pip3 install --upgrade pip
 
 # Install websockify
 RUN git clone https://github.com/novnc/websockify.git /opt/websockify && \
