@@ -51,7 +51,8 @@ RUN apt-get update && apt-get install -y \
 # Install pytorch
 # ======================================
 
-RUN pip3 install torch==1.5.0+cu101 torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 install torch==1.5.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 install torchvision==0.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
 # ======================================
 # Setup an additional entrypoint script
