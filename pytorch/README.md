@@ -43,14 +43,14 @@ chmod a+x build.sh
 and then create a container
 ```
 chmod a+x
-./run.sh `whoami` ros-container fbottarel/pytorch:cpu
+./run.sh `whoami` pytorch-dev fbottarel/pytorch:cpu
 ```
 
 Docker will spin up a container, creating a user inside it with name, group-id and user-id corresponding to the host system current user. The run script also takes care of checking whether the container already exists in a stopped state and just needs to be spun up. It also creates a Xauthority file to ensure proper autentication.
 
 Once the container is running, you can work on it with
 ```
-docker exec -it -u `whoami` pytorch bash
+docker exec -it -u `whoami` pytorch-dev bash
 ```
 
 You might want to mount different volumes. To do so, change or add paths with `--volume`.
