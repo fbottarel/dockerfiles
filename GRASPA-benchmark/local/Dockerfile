@@ -38,9 +38,10 @@ RUN apt install -y python3 python3-dev python3-pip python3-setuptools
 RUN pip3 install --upgrade pip
 
 # Install websockify
-RUN git clone https://github.com/novnc/websockify.git /opt/websockify && \
-    cd /opt/websockify && git checkout v0.9.0 && \
-    python3 setup.py install
+# RUN git clone https://github.com/novnc/websockify.git /opt/websockify && \
+#     cd /opt/websockify && git checkout v0.9.0 && \
+#     python3 setup.py install
+RUN pip3 install websockify==0.9.0
 
 # Clone noVNC
 RUN git clone https://github.com/novnc/noVNC.git /opt/novnc
@@ -62,7 +63,7 @@ RUN cd simox/build && \
     -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DSimox_USE_QT4=ON \
     -DSimox_BUILD_SimDynamics=OFF -DSimDynamics_USE_BULLET=OFF \
     -DSimDynamics_USE_BULLET_USE_GLU=OFF && \
-    make install
+    make -j8 install
 RUN rm -Rf simox
 
 # Create environmental variable for simox
@@ -105,15 +106,3 @@ EXPOSE 6080
 
 # Launch bash from workspace directory
 CMD ["bash"]
-
-# docker user must be take care of
-# - clone benchmark repo
-#RUN git clone https://github.com/robotology/GRASPA-benchmark
-# - compile benchmark repo
-#RUN mkdir GRASPA-benchmark/build && cd GRASPA-benchmark/build && \
-#    cmake .. && make
-# - install python packages
-#RUN pip3 install -r GRASPA-benchmark/requirements.txt
-# - clone benchmark test repo
-#RUN git clone https://github.com/robotology-playground/GRASPA-test.git
-# - create env variable for grasp experiment data
