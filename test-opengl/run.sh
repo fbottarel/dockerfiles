@@ -1,4 +1,4 @@
-#!/usr/bin/#!/usr/bin/env bash
+#!/usr/bin/env bash
 
 # Expose the X server on the host.
 # This only works if the user is root though!
